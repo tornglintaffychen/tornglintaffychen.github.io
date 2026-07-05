@@ -2,6 +2,11 @@
 
 **Bookshelf** is a fast, lightweight, privacy-focused single-page application (SPA) designed to log, structure, and track your personal reading catalog. Operating completely within the browser client, it strips out bulky server setups and tracks your data locally or syncs with your choice of file backups and cloud solutions.
 
+<img width="562" height="875" alt="image" src="https://github.com/user-attachments/assets/dbb3ea76-0c31-4c97-ba40-7b611564d3a5" />
+<img width="524" height="249" alt="image" src="https://github.com/user-attachments/assets/bb9b0429-0831-4639-847a-978e98298e31" />
+<img width="537" height="877" alt="image" src="https://github.com/user-attachments/assets/44979cc1-e807-4d2d-88c2-fd1a20e9708e" />
+<img width="529" height="249" alt="image" src="https://github.com/user-attachments/assets/5e758360-03d8-4253-a399-1d9f730d1f18" />
+
 ---
 
 ## ✨ Features
