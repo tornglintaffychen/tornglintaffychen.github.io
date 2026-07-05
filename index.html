@@ -152,6 +152,36 @@
   .btn-add:active{filter:brightness(0.95);}
 
   /* Section headers */
+  .fresh-cta{
+    position:relative;
+    background:var(--card);
+    border-radius:4px 4px 16px 16px;
+    padding:18px 16px;
+    text-align:center;
+    margin-bottom:24px;
+    box-shadow:0 14px 30px var(--shadow);
+    border:1px solid var(--card-edge);
+    border-top:3px solid transparent;
+    background-image:
+      linear-gradient(var(--card), var(--card)),
+      linear-gradient(100deg, var(--lilac), var(--pink), var(--mint));
+    background-origin:border-box;
+    background-clip:padding-box, border-box;
+  }
+  .fresh-cta p{
+    font-family:'Cormorant Garamond',serif;
+    font-style:italic;
+    font-size:16px;
+    color:var(--ink);
+    margin:0 0 12px;
+    line-height:1.4;
+  }
+  .fresh-cta .util-btn{
+    display:inline-block;
+    width:auto;
+    padding:9px 18px;
+  }
+
   .shelf-label{
     font-family:'IBM Plex Mono',monospace;
     color:var(--lilac);
@@ -442,6 +472,11 @@
     <button class="btn-add" id="addBtn">＋ Add to Stack</button>
   </div>
 
+  <div class="fresh-cta" id="freshStartCta" style="display:none;">
+    <p>No books here yet — starting fresh, or does your library live in a backup somewhere?</p>
+    <button class="util-btn" id="freshLoadBtn">📂 Load from Files</button>
+  </div>
+
   <div class="shelf-label">To Be Read</div>
   <div id="tbrList"></div>
   <div class="empty" id="tbrEmpty">The shelf is empty — summon your first title above.</div>
@@ -456,8 +491,10 @@
   </div>
   <div class="util-row" style="margin-top:8px; border-top:none; padding-top:0;">
     <button class="util-btn" id="saveFilesBtn">📁 Save to Files</button>
+    <button class="util-btn" id="loadFilesBtn">📂 Load from Files</button>
+    <input type="file" id="importFileInput" accept=".json,.txt,application/json,text/plain" style="display:none;">
   </div>
-  <div class="hint">Export before switching phones, then Import on the new one.<br>"Save to Files" lets you pick On My iPhone or iCloud Drive.<br>Add this page to your Home Screen for one-tap access.</div>
+  <div class="hint">Export before switching phones, then Import on the new one.<br>"Save to Files" lets you pick On My iPhone or iCloud Drive.<br>"Load from Files" reads your backup straight from a folder like Files/Books.<br>Add this page to your Home Screen for one-tap access.</div>
 
 </div>
 
@@ -539,9 +576,11 @@ async function fetchCover(title, author){
 function render(){
   const tbr = books.filter(b => !b.read);
   const read = books.filter(b => b.read);
+  const isFreshStart = books.length === 0;
 
-  document.getElementById('tbrEmpty').style.display = tbr.length ? 'none' : 'block';
-  document.getElementById('readEmpty').style.display = read.length ? 'none' : 'block';
+  document.getElementById('freshStartCta').style.display = isFreshStart ? 'block' : 'none';
+  document.getElementById('tbrEmpty').style.display = (!isFreshStart && !tbr.length) ? 'block' : 'none';
+  document.getElementById('readEmpty').style.display = (!isFreshStart && !read.length) ? 'block' : 'none';
 
   document.getElementById('tbrList').innerHTML = tbr.map(cardHtml).join('');
   document.getElementById('readList').innerHTML = read.map(cardHtml).join('');
@@ -782,12 +821,12 @@ document.getElementById('importBtn').onclick = () => openBackupModal('import');
 
 document.getElementById('saveFilesBtn').onclick = async () => {
   const content = JSON.stringify(books, null, 2);
-  const stamp = new Date().toISOString().slice(0,10);
-  const filename = `bookshelf-backup-${stamp}.txt`;
+  const filename = 'bookshelf-backup.json';
 
   try{
     // iOS Safari's share sheet is picky about file types — plain text
-    // shares reliably, where application/json often silently fails.
+    // shares reliably, where application/json can silently fail — but we
+    // keep the .json name so it's easy to recognize and reload later.
     const file = new File([content], filename, {type:'text/plain'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({files:[file], title:'Bookshelf backup'});
@@ -799,6 +838,42 @@ document.getElementById('saveFilesBtn').onclick = async () => {
 
   // Fall back to the reliable copy/paste flow rather than a dead end.
   openBackupModal('export');
+};
+
+document.getElementById('loadFilesBtn').onclick = () => {
+  document.getElementById('importFileInput').click();
+};
+document.getElementById('freshLoadBtn').onclick = () => {
+  document.getElementById('importFileInput').click();
+};
+
+document.getElementById('importFileInput').onchange = (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    let incoming;
+    try{
+      incoming = JSON.parse(reader.result);
+      if(!Array.isArray(incoming)) throw new Error('bad format');
+    }catch(err){
+      askInfo('That file didn\'t look like a valid backup — make sure you picked the right bookshelf-backup file.');
+      e.target.value = '';
+      return;
+    }
+    const replace = await askConfirm('Replace your current list with this backup? Choose Cancel to merge instead.');
+    if(replace){
+      books = incoming;
+    } else {
+      const existingIds = new Set(books.map(b=>b.id));
+      incoming.forEach(b => { if(!existingIds.has(b.id)) books.push(b); });
+    }
+    save(books);
+    render();
+    askInfo('Backup loaded.');
+    e.target.value = ''; // reset so picking the same file again still triggers this
+  };
+  reader.readAsText(file);
 };
 
 render();
