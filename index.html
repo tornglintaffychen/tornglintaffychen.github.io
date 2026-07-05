@@ -417,6 +417,7 @@
     margin-top:10px;
     line-height:1.5;
   }
+
 </style>
 </head>
 <body>
@@ -452,7 +453,10 @@
     <button class="util-btn" id="exportBtn">⤓ Export backup</button>
     <button class="util-btn" id="importBtn">⤒ Import backup</button>
   </div>
-  <div class="hint">Export before switching phones, then Import on the new one.<br>Add this page to your Home Screen for one-tap access.</div>
+  <div class="util-row" style="margin-top:8px; border-top:none; padding-top:0;">
+    <button class="util-btn" id="saveFilesBtn">📁 Save to Files</button>
+  </div>
+  <div class="hint">Export before switching phones, then Import on the new one.<br>"Save to Files" lets you pick On My iPhone or iCloud Drive.<br>Add this page to your Home Screen for one-tap access.</div>
 
 </div>
 
@@ -774,6 +778,24 @@ function openBackupModal(mode){
 
 document.getElementById('exportBtn').onclick = () => openBackupModal('export');
 document.getElementById('importBtn').onclick = () => openBackupModal('import');
+
+document.getElementById('saveFilesBtn').onclick = async () => {
+  const content = JSON.stringify(books, null, 2);
+  const stamp = new Date().toISOString().slice(0,10);
+  const filename = `bookshelf-backup-${stamp}.json`;
+
+  try{
+    const file = new File([content], filename, {type:'application/json'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:'Bookshelf backup'});
+      return;
+    }
+  }catch(e){
+    if(e.name === 'AbortError') return; // user cancelled the share sheet — not an error
+  }
+
+  askInfo('Saving to Files isn\'t available here. Make sure you opened this page in Safari (not Chrome or another browser), then try again — or use Export instead and paste the text into a note.');
+};
 
 render();
 </script>
