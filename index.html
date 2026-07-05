@@ -141,7 +141,7 @@
     display:block;
   }
   .field-row{display:flex; gap:8px; margin-bottom:8px;}
-  input[type=text], input[type=date]{
+  input[type=text], input[type=date], textarea.html-dump-area{
     flex:1;
     font-family:'Quicksand',sans-serif;
     font-weight:500;
@@ -152,8 +152,15 @@
     background:#fbf7ff;
     color:var(--ink);
   }
-  input[type=text]::placeholder{color:#b7a8ce;}
-  input[type=text]:focus, input[type=date]:focus{outline:2px solid var(--lilac); outline-offset:1px;}
+  textarea.html-dump-area {
+    width: 100%;
+    min-height: 85px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    resize: vertical;
+  }
+  input[type=text]::placeholder, textarea.html-dump-area::placeholder{color:#b7a8ce;}
+  input[type=text]:focus, input[type=date]:focus, textarea.html-dump-area:focus{outline:2px solid var(--lilac); outline-offset:1px;}
   button{
     font-family:'IBM Plex Mono',monospace;
     cursor:pointer;
@@ -554,7 +561,7 @@
   <div class="add-card">
     <div class="input-tabs">
       <button class="input-tab-btn active" id="tabManual" onclick="switchInputMethod('manual')">Manual Entry</button>
-      <button class="input-tab-btn" id="tabGoodreads" onclick="switchInputMethod('goodreads')">Goodreads Link</button>
+      <button class="input-tab-btn" id="tabDump" onclick="switchInputMethod('dump')">Paste Goodreads HTML</button>
     </div>
 
     <div id="manualInputFields">
@@ -567,10 +574,10 @@
       </div>
     </div>
 
-    <div id="goodreadsInputField" style="display: none;">
-      <span class="label">Summon book via URL</span>
+    <div id="dumpInputField" style="display: none;">
+      <span class="label">Drop raw curl / HTML response below</span>
       <div class="field-row">
-        <input type="text" id="goodreadsUrlInput" placeholder="https://www.goodreads.com/book/show/..." autocomplete="off">
+        <textarea class="html-dump-area" id="htmlDumpInput" placeholder="<!DOCTYPE html>... Paste entire HTML response here" autocomplete="off"></textarea>
       </div>
     </div>
 
@@ -636,9 +643,9 @@ function uid(){ return 'b' + Date.now() + Math.random().toString(16).slice(2,8);
 function switchInputMethod(method) {
   currentInputMethod = method;
   document.getElementById('tabManual').classList.toggle('active', method === 'manual');
-  document.getElementById('tabGoodreads').classList.toggle('active', method === 'goodreads');
+  document.getElementById('tabDump').classList.toggle('active', method === 'dump');
   document.getElementById('manualInputFields').style.display = method === 'manual' ? 'block' : 'none';
-  document.getElementById('goodreadsInputField').style.display = method === 'goodreads' ? 'block' : 'none';
+  document.getElementById('dumpInputField').style.display = method === 'dump' ? 'block' : 'none';
 }
 
 function askConfirm(message){
@@ -670,22 +677,43 @@ function goodreadsUrl(title, author){
   return `https://www.goodreads.com/search?q=${q}`;
 }
 
-function parseGoodreadsUrl(url) {
+function parseGoodreadsHtml(htmlString) {
   try {
-    const urlObj = new URL(url);
-    if (!urlObj.hostname.includes('goodreads.com')) return null;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
     
-    // Extract title pattern from common route chunks: /book/show/12345.Title_Name
-    const pathParts = urlObj.pathname.split('/');
-    const showIndex = pathParts.indexOf('show');
-    if (showIndex !== -1 && pathParts[showIndex + 1]) {
-      let rawTitleData = pathParts[showIndex + 1];
-      // Strip off the numerical ID block if present
-      let cleanTitle = rawTitleData.replace(/^\d+\./, '').replace(/_/g, ' ');
-      if (cleanTitle) return { title: decodeURIComponent(cleanTitle), author: '' };
+    let titleEl = doc.querySelector('[data-testid="bookTitle"]');
+    let title = titleEl ? titleEl.textContent.trim() : '';
+    
+    if (!title) {
+      let pageTitle = doc.querySelector('title') ? doc.querySelector('title').textContent : '';
+      if (pageTitle) {
+        title = pageTitle.replace(/by .*| Goodreads/gi, '').trim();
+      }
     }
-  } catch(e) {}
-  return null;
+    
+    let authorEl = doc.querySelector('[data-testid="name"]') || doc.querySelector('.ContributorLink__name');
+    let author = authorEl ? authorEl.textContent.trim() : '';
+    
+    if(!title) {
+      let ogTitle = doc.querySelector('meta[property="og:title"]');
+      if(ogTitle) title = ogTitle.getAttribute('content');
+    }
+    
+    let coverEl = doc.querySelector('.BookPage__bookCover img') || doc.querySelector('[data-testid="bookCover"] img') || doc.querySelector('meta[property="og:image"]');
+    let cover = null;
+    if (coverEl) {
+      cover = coverEl.tagName === 'META' ? coverEl.getAttribute('content') : coverEl.src;
+    }
+    
+    return {
+      title: title || 'Pasted Goodreads Book',
+      author: author || '',
+      cover: cover
+    };
+  } catch(e) {
+    return null;
+  }
 }
 
 async function searchOpenLibrary(title, author){
@@ -1025,6 +1053,7 @@ document.getElementById('addBtn').onclick = async () => {
   let title = '';
   let author = '';
   let link = '';
+  let cover = null;
 
   if (currentInputMethod === 'manual') {
     const titleInput = document.getElementById('titleInput');
@@ -1035,24 +1064,26 @@ document.getElementById('addBtn').onclick = async () => {
     link = goodreadsUrl(title, author);
     titleInput.value=''; authorInput.value='';
   } else {
-    const grInput = document.getElementById('goodreadsUrlInput');
-    link = grInput.value.trim();
-    if(!link) { grInput.focus(); return; }
+    const dumpArea = document.getElementById('htmlDumpInput');
+    const rawHtml = dumpArea.value.trim();
+    if(!rawHtml) { dumpArea.focus(); return; }
     
-    const parsed = parseGoodreadsUrl(link);
+    const parsed = parseGoodreadsHtml(rawHtml);
     if(parsed) {
       title = parsed.title;
       author = parsed.author;
+      cover = parsed.cover;
     } else {
-      title = "Linked Goodreads Book";
+      title = "Pasted Goodreads Book";
     }
-    grInput.value = '';
+    link = goodreadsUrl(title, author);
+    dumpArea.value = '';
   }
 
   const book = {
     id: uid(),
     title, author,
-    cover: null,
+    cover: cover,
     goodreads: link,
     formats: [],
     rating: 0,
@@ -1068,12 +1099,11 @@ document.getElementById('addBtn').onclick = async () => {
   save(books);
   render();
 
-  if(title && title !== "Linked Goodreads Book"){
+  if(title && !book.cover){
     const info = await fetchCover(title, author);
     if(info){
       book.cover = info.cover;
       if(!author && info.author) book.author = info.author;
-      // Re-generate standard query dynamic link if user typed it manually
       if (currentInputMethod === 'manual') book.goodreads = goodreadsUrl(book.title, book.author);
       save(books);
       render();
@@ -1085,9 +1115,6 @@ document.getElementById('titleInput').addEventListener('keydown', e=>{
   if(e.key==='Enter') document.getElementById('addBtn').click();
 });
 document.getElementById('authorInput').addEventListener('keydown', e=>{
-  if(e.key==='Enter') document.getElementById('addBtn').click();
-});
-document.getElementById('goodreadsUrlInput').addEventListener('keydown', e=>{
   if(e.key==='Enter') document.getElementById('addBtn').click();
 });
 
