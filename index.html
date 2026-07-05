@@ -83,16 +83,16 @@
 
   .wrap{max-width:520px;margin:0 auto;padding:0 14px;}
 
-  /* Input method tab layout */
+  /* Input method switcher */
   .input-tabs {
     display: flex;
     gap: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
   .input-tab-btn {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
-    padding: 5px 10px;
+    padding: 4px 8px;
     background: transparent;
     border: 1px solid var(--card-edge);
     border-radius: 6px;
@@ -222,10 +222,7 @@
     background:linear-gradient(90deg, var(--card-edge), transparent);
   }
 
-  /* Book card & Drag styling */
-  .shelf-dropzone {
-    min-height: 20px;
-  }
+  /* Book card */
   .book{
     position:relative;
     background:var(--card);
@@ -238,19 +235,18 @@
     box-shadow:0 8px 20px var(--shadow);
     overflow:hidden;
     cursor: grab;
-    user-select: none;
   }
-  .book:active { cursor: dragging; }
-  .book.dragging { opacity: 0.4; border: 1px dashed var(--lilac); }
+  .book:active{cursor: dragging;}
+  .book.dragging{opacity: 0.4; border: 1px dashed var(--lilac);}
   .book::before{
     content:'';
     position:absolute; top:0; left:0; right:0; height:3px;
     background:linear-gradient(100deg, var(--lilac), var(--pink), var(--mint));
   }
+  .book.read{opacity:.78;}
   .book.reading::before{
     background:linear-gradient(100deg, var(--mint), var(--gold));
   }
-  .book.read{opacity:.78;}
   .cover{
     position:relative;
     width:52px;
@@ -305,7 +301,7 @@
     font-family:'IBM Plex Mono',monospace;
     font-size:9.5px;
     color: var(--dim);
-    margin: 4px 0 6px 0;
+    margin: 4px 0;
   }
   .stars{
     display:flex;
@@ -340,10 +336,10 @@
   }
   .edit-notes{
     width:100%;
-    min-height:65px;
+    min-height:60px;
     resize:vertical;
     font-family:'Quicksand',sans-serif;
-    margin-top:4px;
+    margin-top:6px;
     font-size:13px;
     padding:6px;
     border:1px solid var(--card-edge);
@@ -443,7 +439,7 @@
     display: block;
     margin: 4px 0 2px;
   }
-  .edit-actions{display:flex; gap:8px; margin-top:10px;}
+  .edit-actions{display:flex; gap:8px; margin-top:8px;}
   .edit-actions button{
     font-size:10px;
     letter-spacing:.08em;
@@ -618,6 +614,7 @@ let currentInputMethod = 'manual';
 function load(){
   try{ 
     let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    // Migration helper for legacy objects without strict reading statuses
     return data.map(b => {
       if(b.read === true && !b.status) b.status = 'read';
       if(b.read === false && !b.status) b.status = 'tbr';
@@ -678,15 +675,14 @@ function parseGoodreadsUrl(url) {
     const urlObj = new URL(url);
     if (!urlObj.hostname.includes('goodreads.com')) return null;
     
+    // Extract title pattern from common route chunks: /book/show/12345.Title_Name
     const pathParts = urlObj.pathname.split('/');
     const showIndex = pathParts.indexOf('show');
     if (showIndex !== -1 && pathParts[showIndex + 1]) {
       let rawTitleData = pathParts[showIndex + 1];
-      // Strip numbers at the start followed by a hyphen or period
-      let cleanTitle = rawTitleData.replace(/^\d+[\.-]/, '').replace(/-/g, ' ');
-      // Capitalize to title case
-      cleanTitle = cleanTitle.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-      if (cleanTitle) return { title: cleanTitle, author: '' };
+      // Strip off the numerical ID block if present
+      let cleanTitle = rawTitleData.replace(/^\d+\./, '').replace(/_/g, ' ');
+      if (cleanTitle) return { title: decodeURIComponent(cleanTitle), author: '' };
     }
   } catch(e) {}
   return null;
@@ -761,6 +757,7 @@ function setupInteractions() {
   });
 }
 
+/* HTML5 Native Drag & Drop Logic for Reordering & Inter-shelf Movement */
 function setupDragAndDrop() {
   const shelfLists = document.querySelectorAll('.shelf-dropzone');
   const items = document.querySelectorAll('.book');
@@ -813,6 +810,7 @@ function saveReorderedLists() {
       const id = el.getAttribute('data-id');
       const foundBook = books.find(b => b.id === id);
       if (foundBook) {
+        // Adapt target statuses dynamically if dropped on a new list
         if (foundBook.status !== shelfName) {
           foundBook.status = shelfName;
           foundBook.read = (shelfName === 'read');
@@ -824,6 +822,7 @@ function saveReorderedLists() {
     });
   });
 
+  // Re-append remaining elements that weren't inside standard components
   books.forEach(b => {
     if(!updatedBooks.some(ub => ub.id === b.id)) updatedBooks.push(b);
   });
@@ -873,9 +872,6 @@ function cardHtml(b){
         <label class="edit-label-sm">Goodreads Link</label>
         <input class="edit-field" id="editGoodreads-${b.id}" type="text" value="${escapeHtml(b.goodreads||'')}" placeholder="Goodreads URL">
 
-        <label class="edit-label-sm">Cover Image URL</label>
-        <input class="edit-field" id="editCover-${b.id}" type="text" value="${escapeHtml(b.cover||'')}" placeholder="Cover URL">
-
         <label class="edit-label-sm">Date Started</label>
         <input class="edit-field" id="editDateStarted-${b.id}" type="date" value="${formatDate(b.dateStarted)}">
 
@@ -883,7 +879,7 @@ function cardHtml(b){
         <input class="edit-field" id="editDateCompleted-${b.id}" type="date" value="${formatDate(b.dateCompleted)}">
 
         <label class="edit-label-sm">Notes</label>
-        <textarea class="edit-notes" id="editNotes-${b.id}" placeholder="Thoughts, quotes, or shelf notes...">${escapeHtml(b.notes||'')}</textarea>
+        <textarea class="edit-notes" id="editNotes-${b.id}" placeholder="Thoughts, quotes, or reasons to read...">${escapeHtml(b.notes||'')}</textarea>
 
         <div class="edit-actions">
           <button class="save-btn" data-save="${b.id}">Save Changes</button>
@@ -893,6 +889,7 @@ function cardHtml(b){
     </div>`;
   }
 
+  // Display conditions for simple text notes on viewing card
   const notesMarkup = (b.notes && b.notes.trim()) 
     ? `<div class="book-notes">${escapeHtml(b.notes)}</div>` 
     : '';
@@ -947,7 +944,6 @@ async function saveEdit(id){
   const newTitle = document.getElementById(`editTitle-${id}`).value.trim();
   const newAuthor = document.getElementById(`editAuthor-${id}`).value.trim();
   const newGoodreads = document.getElementById(`editGoodreads-${id}`).value.trim();
-  const newCover = document.getElementById(`editCover-${id}`).value.trim();
   const newNotes = document.getElementById(`editNotes-${id}`).value.trim();
   const newStart = document.getElementById(`editDateStarted-${id}`).value;
   const newComplete = document.getElementById(`editDateCompleted-${id}`).value;
@@ -958,7 +954,6 @@ async function saveEdit(id){
   b.title = newTitle;
   b.author = newAuthor;
   b.goodreads = newGoodreads || goodreadsUrl(b.title, b.author);
-  b.cover = newCover;
   b.notes = newNotes;
   b.dateStarted = newStart ? new Date(newStart).toISOString() : null;
   b.dateCompleted = newComplete ? new Date(newComplete).toISOString() : null;
@@ -967,7 +962,7 @@ async function saveEdit(id){
   save(books);
   render();
 
-  if(titleChanged && !newGoodreads && !newCover){
+  if(titleChanged && !newGoodreads){
     const info = await fetchCover(b.title, b.author);
     if(info){
       b.cover = info.cover;
@@ -1078,6 +1073,7 @@ document.getElementById('addBtn').onclick = async () => {
     if(info){
       book.cover = info.cover;
       if(!author && info.author) book.author = info.author;
+      // Re-generate standard query dynamic link if user typed it manually
       if (currentInputMethod === 'manual') book.goodreads = goodreadsUrl(book.title, book.author);
       save(books);
       render();
@@ -1156,6 +1152,7 @@ function openBackupModal(mode){
         const existingIds = new Set(books.map(b=>b.id));
         incoming.forEach(b => { if(!existingIds.has(b.id)) books.push(b); });
       }
+      // Re-run migration map on custom raw imports
       books = books.map(b => {
         if(b.read === true && !b.status) b.status = 'read';
         if(b.read === false && !b.status) b.status = 'tbr';
