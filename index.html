@@ -758,9 +758,9 @@ function normalizeLibrary(raw){
     throw new Error('Unrecognized backup format');
   }
   return {
-    reading: (raw.reading || []).map(normalizeBook),
-    tbr: (raw.tbr || []).map(normalizeBook),
-    read: (raw.read || []).map(normalizeBook)
+    reading: (raw.reading || []).map(normalizeBook).sort((a, b) => new Date(b.dateStarted).getTime() - new Date(a.dateStarted).getTime()),
+    tbr: (raw.tbr || []).map(normalizeBook).sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()),
+    read: (raw.read || []).map(normalizeBook).sort((a, b) => new Date(b.dateCompleted).getTime() - new Date(a.dateCompleted).getTime()),
   };
 }
 
@@ -1093,6 +1093,9 @@ function cardHtml(b, shelf){
         <label class="edit-label-sm">Goodreads Link</label>
         <input class="edit-field" id="editGoodreads-${b.id}" type="text" value="${escapeHtml(b.goodreads||'')}" placeholder="Goodreads URL">
 
+        <label class="edit-label-sm">Date Added</label>
+        <input class="edit-field" id="editDateAdded-${b.id}" type="date" value="${formatDate(b.dateAdded)}">
+
         <label class="edit-label-sm">Date Started</label>
         <input class="edit-field" id="editDateStarted-${b.id}" type="date" value="${formatDate(b.dateStarted)}">
 
@@ -1121,6 +1124,8 @@ function cardHtml(b, shelf){
     const startStr = b.dateStarted ? `Started: ${formatDate(b.dateStarted)} · ` : '';
     const endStr = b.dateCompleted ? `Finished: ${formatDate(b.dateCompleted)}` : 'Finished';
     datesMarkup = `<div class="date-badge-row">✨ ${startStr}${endStr}</div>`;
+  } else if (shelf === 'tbr' && b.dateAdded) {
+    datesMarkup = `<div class="date-badge-row">&#128467; Added: ${formatDate(b.dateAdded)}</div>`;
   }
 
   return `
@@ -1206,15 +1211,21 @@ function setBookStatus(fromShelf, id, targetShelf){
   if(idx === -1) return;
   const [b] = library[fromShelf].splice(idx, 1);
 
+  if(targetShelf === 'tbr' && !b.dateAdded) {
+    b.dateAdded = new Date().toISOString();
+  }
+
   if(targetShelf === 'reading' && !b.dateStarted) {
     b.dateStarted = new Date().toISOString();
   }
+
   if(targetShelf === 'read' && !b.dateCompleted) {
     b.dateCompleted = new Date().toISOString();
     if(!b.dateStarted) b.dateStarted = new Date().toISOString();
   }
 
-  library[targetShelf].unshift(b);
+  library[targetShelf].push(b);
+
   save();
   render();
 }
@@ -1299,7 +1310,7 @@ document.getElementById('addBtn').onclick = async () => {
     dateCompleted: null
   };
 
-  library.tbr.unshift(book);
+  library.tbr.push(book);
   save();
   render();
 
