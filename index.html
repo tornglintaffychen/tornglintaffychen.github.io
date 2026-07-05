@@ -646,16 +646,19 @@
 
   <div class="fresh-cta" id="freshStartCta" style="display:none;">
     <p>No books here yet — starting fresh, or does your library live in a backup somewhere?</p>
-    <button class="util-btn" id="freshLoadBtn">📂 Load from Files</button>
+    <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+      <button class="util-btn" id="freshLoadBtn">📂 Load from Files</button>
+      <button class="util-btn" id="freshDriveLoadBtn">☁️ Load from Drive</button>
+    </div>
   </div>
-
-  <div class="shelf-label">To Be Read</div>
-  <div id="tbrList" class="shelf-dropzone" data-shelf="tbr"></div>
-  <div class="empty" id="tbrEmpty">The shelf is empty — summon your first title above.</div>
 
   <div class="shelf-label">Reading Now</div>
   <div id="readingList" class="shelf-dropzone" data-shelf="reading"></div>
   <div class="empty" id="readingEmpty">Currently tracking no active adventures.</div>
+
+  <div class="shelf-label">To Be Read</div>
+  <div id="tbrList" class="shelf-dropzone" data-shelf="tbr"></div>
+  <div class="empty" id="tbrEmpty">The shelf is empty — summon your first title above.</div>
 
   <div class="shelf-label">Already Read</div>
   <div id="readList" class="shelf-dropzone" data-shelf="read"></div>
@@ -677,6 +680,7 @@
       <span class="drive-dot" id="driveDot"></span>
       <span class="drive-status-text" id="driveStatusText">Google Drive: not connected</span>
       <button class="drive-link-btn" id="driveActionBtn">Connect</button>
+      <button class="drive-link-btn" id="driveLoadBtn">Load</button>
       <button class="drive-link-btn" id="driveSettingsBtn">Settings</button>
     </div>
   </div>
@@ -687,20 +691,70 @@
 const STORAGE_KEY = 'bookshelf-books-v2';
 let currentInputMethod = 'manual';
 
+function normalizeBook(b){
+  if(b.read === true && !b.status) b.status = 'read';
+  if(b.read === false && !b.status) b.status = 'tbr';
+  if(!b.status) b.status = 'tbr';
+  if(!b.formats) b.formats = [];
+  b.read = (b.status === 'read');
+  return b;
+}
+
+// Storage/backup shape is { reading: [...], tbr: [...], read: [...] }.
+// Internally we still work with one flat `books` array (status field on
+// each book) since that's simplest for filtering/finding — grouping only
+// happens at the save/export boundary and ungrouping at load/import.
+function groupByStatus(bookArray){
+  const grouped = { reading: [], tbr: [], read: [] };
+  bookArray.forEach(b => {
+    const status = (b.status === 'reading' || b.status === 'read') ? b.status : 'tbr';
+    grouped[status].push(b);
+  });
+  return grouped;
+}
+
+function flattenGrouped(grouped){
+  const reading = Array.isArray(grouped.reading) ? grouped.reading.map(b => ({...b, status:'reading'})) : [];
+  const tbr     = Array.isArray(grouped.tbr)     ? grouped.tbr.map(b => ({...b, status:'tbr'}))         : [];
+  const read    = Array.isArray(grouped.read)    ? grouped.read.map(b => ({...b, status:'read'}))       : [];
+  return [...reading, ...tbr, ...read];
+}
+
+// Accepts either the new grouped shape or the old flat-array shape
+// (for backup files/pastes created before this change) and always
+// returns a flat array of normalized books.
+function normalizeBackupData(parsed){
+  let flat;
+  if(Array.isArray(parsed)){
+    flat = parsed; // legacy flat-array backup
+  } else if(parsed && typeof parsed === 'object' &&
+            (Array.isArray(parsed.reading) || Array.isArray(parsed.tbr) || Array.isArray(parsed.read))){
+    flat = flattenGrouped(parsed);
+  } else {
+    throw new Error('Unrecognized backup format');
+  }
+  return flat.map(normalizeBook);
+}
+
 function load(){
-  try{ 
-    let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    return data.map(b => {
-      if(b.read === true && !b.status) b.status = 'read';
-      if(b.read === false && !b.status) b.status = 'tbr';
-      if(!b.formats) b.formats = [];
-      return b;
-    });
+  try{
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if(!raw) return [];
+    return normalizeBackupData(raw);
   }
   catch(e){ return []; }
 }
+
+// Writes to localStorage only — used internally when data arrives FROM
+// Drive/Files, so we don't mark it as a new "local change" (which would
+// make it look like this device has unsynced edits ahead of Drive).
+function persistLocal(books){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(groupByStatus(books)));
+}
+
 function save(books){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+  persistLocal(books);
+  localStorage.setItem('bookshelf-local-last-change', String(Date.now()));
   scheduleDriveSync();
 }
 
@@ -928,7 +982,7 @@ function getDragAfterElement(container, y) {
 
 function saveReorderedLists() {
   const updatedBooks = [];
-  const shelves = ['tbr', 'reading', 'read'];
+  const shelves = ['reading', 'tbr', 'read'];
 
   shelves.forEach(shelfName => {
     const zone = document.querySelector(`.shelf-dropzone[data-shelf="${shelfName}"]`);
@@ -1218,7 +1272,7 @@ document.getElementById('authorInput').addEventListener('keydown', e=>{
 });
 
 function openBackupModal(mode){
-  const jsonStr = JSON.stringify(books, null, 2);
+  const jsonStr = JSON.stringify(groupByStatus(books), null, 2);
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
@@ -1264,8 +1318,7 @@ function openBackupModal(mode){
       const text = ta.value.trim();
       let incoming;
       try{
-        incoming = JSON.parse(text);
-        if(!Array.isArray(incoming)) throw new Error('bad format');
+        incoming = normalizeBackupData(JSON.parse(text));
       }catch(err){
         askInfo('That didn\'t look like valid backup text — check that you copied the whole thing.');
         return;
@@ -1278,11 +1331,6 @@ function openBackupModal(mode){
         const existingIds = new Set(books.map(b=>b.id));
         incoming.forEach(b => { if(!existingIds.has(b.id)) books.push(b); });
       }
-      books = books.map(b => {
-        if(b.read === true && !b.status) b.status = 'read';
-        if(b.read === false && !b.status) b.status = 'tbr';
-        return b;
-      });
       save(books);
       render();
       askInfo('Backup loaded.');
@@ -1294,7 +1342,7 @@ document.getElementById('exportBtn').onclick = () => openBackupModal('export');
 document.getElementById('importBtn').onclick = () => openBackupModal('import');
 
 document.getElementById('saveFilesBtn').onclick = async () => {
-  const content = JSON.stringify(books, null, 2);
+  const content = JSON.stringify(groupByStatus(books), null, 2);
   const stamp = new Date().toISOString().slice(0,10);
   const filename = `bookshelf-backup-${stamp}.json`;
 
@@ -1316,6 +1364,7 @@ document.getElementById('loadFilesBtn').onclick = () => {
 document.getElementById('freshLoadBtn').onclick = () => {
   document.getElementById('importFileInput').click();
 };
+document.getElementById('freshDriveLoadBtn').onclick = () => loadFromDrive();
 
 document.getElementById('importFileInput').onchange = (e) => {
   const file = e.target.files[0];
@@ -1324,8 +1373,7 @@ document.getElementById('importFileInput').onchange = (e) => {
   reader.onload = async () => {
     let incoming;
     try{
-      incoming = JSON.parse(reader.result);
-      if(!Array.isArray(incoming)) throw new Error('bad format');
+      incoming = normalizeBackupData(JSON.parse(reader.result));
     }catch(err){
       askInfo('That file didn\'t look like a valid backup — make sure you picked the right bookshelf-backup file.');
       e.target.value = '';
@@ -1338,11 +1386,6 @@ document.getElementById('importFileInput').onchange = (e) => {
       const existingIds = new Set(books.map(b=>b.id));
       incoming.forEach(b => { if(!existingIds.has(b.id)) books.push(b); });
     }
-    books = books.map(b => {
-      if(b.read === true && !b.status) b.status = 'read';
-      if(b.read === false && !b.status) b.status = 'tbr';
-      return b;
-    });
     save(books);
     render();
     askInfo('Backup loaded.');
@@ -1439,7 +1482,7 @@ async function ensureDriveToken(interactive){
 }
 
 async function driveSaveBackup(token){
-  const content = JSON.stringify(books, null, 2);
+  const content = JSON.stringify(groupByStatus(books), null, 2);
 
   if(driveFileId){
     const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
@@ -1471,7 +1514,12 @@ async function driveSaveBackup(token){
     localStorage.setItem('bookshelf-drive-file-id', driveFileId);
   }
 
-  localStorage.setItem('bookshelf-drive-last-sync', new Date().toISOString());
+  const now = Date.now();
+  localStorage.setItem('bookshelf-drive-last-sync', new Date(now).toISOString());
+  localStorage.setItem('bookshelf-drive-last-sync-ts', String(now));
+  // We just wrote this content, so as far as conflict-detection is concerned
+  // Drive is now "known" to match local as of this moment.
+  localStorage.setItem('bookshelf-drive-known-modified', String(now));
 }
 
 async function doDriveSync(interactive){
@@ -1491,6 +1539,153 @@ function scheduleDriveSync(){
   if(!driveClientId) return;
   clearTimeout(driveSyncTimer);
   driveSyncTimer = setTimeout(() => doDriveSync(false), 3000);
+}
+
+async function driveFindBackupFile(token){
+  const params = new URLSearchParams({
+    q: `name='${DRIVE_FILENAME}' and trashed=false`,
+    fields: 'files(id,name,modifiedTime)',
+    spaces: 'drive',
+    pageSize: '10'
+  });
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files?${params.toString()}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if(!res.ok) throw new Error('Drive search failed: ' + res.status);
+  const data = await res.json();
+  return (data.files && data.files[0]) || null;
+}
+
+async function driveDownloadBackup(token, fileId){
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if(!res.ok) throw new Error('Drive download failed: ' + res.status);
+  return await res.json();
+}
+
+function applyIncomingBooks(rawJson, mode){
+  const incoming = normalizeBackupData(rawJson);
+  if(mode === 'replace'){
+    books = incoming;
+  } else {
+    const existingIds = new Set(books.map(b=>b.id));
+    incoming.forEach(b => { if(!existingIds.has(b.id)) books.push(b); });
+  }
+}
+
+async function loadFromDrive(){
+  if(!driveClientId){
+    openDriveSettingsModal();
+    return;
+  }
+  setDriveStatus('syncing');
+  try{
+    const token = await ensureDriveToken(true); // interactive — this is a deliberate user action
+    if(!token){ setDriveStatus('needs-reconnect'); return; }
+
+    const file = await driveFindBackupFile(token);
+    if(!file){
+      setDriveStatus('connected');
+      askInfo('No backup found in Google Drive yet — this Google account/app pair hasn\'t saved one. Make sure you signed in with the same account you used to connect Drive before.');
+      return;
+    }
+
+    // Remember this file so future auto-syncs update it instead of creating a duplicate.
+    driveFileId = file.id;
+    localStorage.setItem('bookshelf-drive-file-id', driveFileId);
+
+    const rawJson = await driveDownloadBackup(token, file.id);
+    const replace = await askConfirm('Replace your current list with this Google Drive backup? Choose Cancel to merge instead.');
+    applyIncomingBooks(rawJson, replace ? 'replace' : 'merge');
+
+    const now = Date.now();
+    persistLocal(books);
+    localStorage.setItem('bookshelf-local-last-change', String(now));
+    localStorage.setItem('bookshelf-drive-known-modified', String(new Date(file.modifiedTime).getTime()));
+    render();
+    scheduleDriveSync(); // reconcile Drive with the merged/replaced result
+    setDriveStatus('connected');
+    askInfo('Loaded from Google Drive.');
+  }catch(e){
+    setDriveStatus('error');
+    askInfo('Could not load from Google Drive — try Reconnect, then Load again.');
+  }
+}
+
+// Runs on startup (when Drive is configured) to decide, without asking every
+// time, whether Drive has something newer we should pull down:
+//  - If Drive is newer AND this device has no unsynced local edits → pull silently.
+//  - If Drive is newer AND this device DOES have unsynced edits → ask first (real conflict).
+//  - If Drive isn't newer but this device has unsynced edits → push them (catch up
+//    on a sync that didn't get to finish, e.g. app closed mid-debounce).
+async function checkDriveForUpdates(){
+  if(!driveClientId) return;
+  try{
+    const token = await ensureDriveToken(false); // silent only — don't interrupt app launch with a login prompt
+    if(!token) return; // can't check quietly; normal manual/auto sync still available
+
+    let file = null;
+    if(driveFileId){
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?fields=modifiedTime`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if(res.status === 404){
+        driveFileId = null;
+        localStorage.removeItem('bookshelf-drive-file-id');
+      } else if(res.ok){
+        const meta = await res.json();
+        file = { id: driveFileId, modifiedTime: meta.modifiedTime };
+      }
+    }
+    if(!file){
+      file = await driveFindBackupFile(token);
+      if(file){
+        driveFileId = file.id;
+        localStorage.setItem('bookshelf-drive-file-id', driveFileId);
+      }
+    }
+    if(!file) return; // nothing on Drive yet — first sync will create it
+
+    const driveModified = new Date(file.modifiedTime).getTime();
+    const knownModified = Number(localStorage.getItem('bookshelf-drive-known-modified') || 0);
+    const localLastChange = Number(localStorage.getItem('bookshelf-local-last-change') || 0);
+    const lastSyncPush = Number(localStorage.getItem('bookshelf-drive-last-sync-ts') || 0);
+    const hasUnsyncedLocalChanges = localLastChange > lastSyncPush;
+
+    if(driveModified <= knownModified){
+      // Drive has nothing we haven't already seen. If we have local edits
+      // that never made it up (e.g. app closed mid-debounce), flush them now.
+      if(hasUnsyncedLocalChanges) doDriveSync(false);
+      return;
+    }
+
+    if(!hasUnsyncedLocalChanges){
+      // Safe: nothing to lose locally, so just pull Drive's newer copy.
+      const rawJson = await driveDownloadBackup(token, file.id);
+      applyIncomingBooks(rawJson, 'replace');
+      persistLocal(books);
+      localStorage.setItem('bookshelf-drive-known-modified', String(driveModified));
+      localStorage.setItem('bookshelf-drive-last-sync-ts', String(Date.now()));
+      render();
+      setDriveStatus('connected');
+    } else {
+      // Real conflict: both sides changed. Ask rather than silently picking one.
+      const wantsDrive = await askConfirm('Your Google Drive backup has newer changes than this device, and this device also has unsynced edits. Load the Drive version? (Cancel keeps this device\'s version — it will overwrite Drive on the next sync.)');
+      if(wantsDrive){
+        const rawJson = await driveDownloadBackup(token, file.id);
+        applyIncomingBooks(rawJson, 'replace');
+        persistLocal(books);
+        localStorage.setItem('bookshelf-drive-known-modified', String(driveModified));
+        localStorage.setItem('bookshelf-drive-last-sync-ts', String(Date.now()));
+        render();
+      }
+      setDriveStatus('connected');
+    }
+  }catch(e){
+    // Silent failure on the startup check — don't disrupt the user with this;
+    // manual Load/Sync buttons remain available.
+  }
 }
 
 function openDriveSettingsModal(){
@@ -1532,11 +1727,12 @@ document.getElementById('driveActionBtn').onclick = () => {
   }
   doDriveSync(true);
 };
+document.getElementById('driveLoadBtn').onclick = () => loadFromDrive();
 
 initDriveTokenClientIfNeeded();
 setDriveStatus('idle');
 if(driveClientId){
-  doDriveSync(false);
+  checkDriveForUpdates();
 }
 
 render();
