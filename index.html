@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Bookshelf">
 <meta name="color-scheme" content="light">
 <title>Bookshelf — Reading Tracker</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Quicksand:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -553,6 +554,58 @@
     line-height:1.5;
   }
 
+  .drive-panel{
+    margin-top:18px;
+    padding-top:16px;
+    border-top:1px solid var(--card-edge);
+  }
+  .drive-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .drive-dot{
+    width:8px; height:8px; border-radius:50%;
+    flex:none;
+    background:#c9bfd9;
+  }
+  .drive-dot.on{background:linear-gradient(100deg, var(--lilac), var(--mint));}
+  .drive-dot.error{background:var(--pink);}
+  .drive-status-text{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--dim);
+    letter-spacing:.03em;
+  }
+  .drive-link-btn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--lilac);
+    background:none;
+    text-decoration:underline;
+  }
+  .settings-field-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--lilac);
+    display:block;
+    margin-bottom:6px;
+  }
+  .settings-hint{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;
+    color:var(--dim);
+    line-height:1.6;
+    margin:10px 0 14px;
+  }
+  .settings-hint a{color:var(--lilac);}
+
 </style>
 </head>
 <body>
@@ -619,6 +672,15 @@
   </div>
   <div class="hint">Export before switching phones, then Import on the new one.<br>"Save to Files" lets you pick On My iPhone or iCloud Drive.<br>"Load from Files" reads your backup straight from a folder like Files/Books.<br>Add this page to your Home Screen for one-tap access.</div>
 
+  <div class="drive-panel">
+    <div class="drive-row">
+      <span class="drive-dot" id="driveDot"></span>
+      <span class="drive-status-text" id="driveStatusText">Google Drive: not connected</span>
+      <button class="drive-link-btn" id="driveActionBtn">Connect</button>
+      <button class="drive-link-btn" id="driveSettingsBtn">Settings</button>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -639,6 +701,7 @@ function load(){
 }
 function save(books){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+  scheduleDriveSync();
 }
 
 let books = load();
@@ -1287,6 +1350,194 @@ document.getElementById('importFileInput').onchange = (e) => {
   };
   reader.readAsText(file);
 };
+
+/* ---------- Google Drive auto-sync ---------- */
+
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const DRIVE_FILENAME = 'bookshelf-backup.json';
+let driveClientId = localStorage.getItem('bookshelf-drive-client-id') || '';
+let driveFileId = localStorage.getItem('bookshelf-drive-file-id') || null;
+let driveTokenClient = null;
+let driveToken = null;      // {access_token, expiresAt}
+let driveSyncTimer = null;
+
+function setDriveStatus(status){
+  const dot = document.getElementById('driveDot');
+  const text = document.getElementById('driveStatusText');
+  const actionBtn = document.getElementById('driveActionBtn');
+  if(!dot) return;
+  dot.className = 'drive-dot' + (status==='connected' ? ' on' : (status==='error'||status==='needs-reconnect' ? ' error' : ''));
+  const lastSync = localStorage.getItem('bookshelf-drive-last-sync');
+  const lastSyncStr = lastSync ? new Date(lastSync).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : null;
+
+  if(!driveClientId){
+    text.textContent = 'Google Drive: not set up';
+    actionBtn.textContent = 'Connect';
+  } else if(status === 'connected'){
+    text.textContent = lastSyncStr ? `Google Drive: synced ${lastSyncStr}` : 'Google Drive: connected';
+    actionBtn.textContent = 'Sync now';
+  } else if(status === 'syncing'){
+    text.textContent = 'Google Drive: syncing…';
+    actionBtn.textContent = 'Sync now';
+  } else if(status === 'needs-reconnect'){
+    text.textContent = 'Google Drive: needs reconnect';
+    actionBtn.textContent = 'Reconnect';
+  } else if(status === 'error'){
+    text.textContent = 'Google Drive: sync failed';
+    actionBtn.textContent = 'Retry';
+  } else {
+    text.textContent = lastSyncStr ? `Google Drive: last synced ${lastSyncStr}` : 'Google Drive: not connected';
+    actionBtn.textContent = 'Connect';
+  }
+}
+
+function initDriveTokenClientIfNeeded(){
+  if(driveTokenClient || !driveClientId) return;
+  if(!window.google || !google.accounts || !google.accounts.oauth2){
+    setTimeout(initDriveTokenClientIfNeeded, 500);
+    return;
+  }
+  driveTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: driveClientId,
+    scope: DRIVE_SCOPE,
+    callback: () => {}
+  });
+}
+
+function requestDriveToken(interactive){
+  return new Promise((resolve) => {
+    if(!driveClientId){ resolve(null); return; }
+    initDriveTokenClientIfNeeded();
+    if(!driveTokenClient){ resolve(null); return; }
+
+    let settled = false;
+    driveTokenClient.callback = (resp) => {
+      if(settled) return;
+      settled = true;
+      if(resp && resp.access_token){
+        driveToken = { access_token: resp.access_token, expiresAt: Date.now() + (resp.expires_in*1000 - 60000) };
+        resolve(resp.access_token);
+      } else {
+        resolve(null);
+      }
+    };
+    driveTokenClient.error_callback = () => {
+      if(settled) return;
+      settled = true;
+      resolve(null);
+    };
+    if(!interactive){
+      setTimeout(() => { if(!settled){ settled = true; resolve(null); } }, 4000);
+    }
+    driveTokenClient.requestAccessToken({ prompt: interactive ? 'consent' : '' });
+  });
+}
+
+async function ensureDriveToken(interactive){
+  if(driveToken && driveToken.expiresAt > Date.now()) return driveToken.access_token;
+  return await requestDriveToken(interactive);
+}
+
+async function driveSaveBackup(token){
+  const content = JSON.stringify(books, null, 2);
+
+  if(driveFileId){
+    const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
+      method:'PATCH',
+      headers:{ 'Authorization':`Bearer ${token}`, 'Content-Type':'application/json' },
+      body: content
+    });
+    if(res.status === 404){
+      driveFileId = null;
+      localStorage.removeItem('bookshelf-drive-file-id');
+      return driveSaveBackup(token);
+    }
+    if(!res.ok) throw new Error('Drive update failed: ' + res.status);
+  } else {
+    const boundary = 'bookshelfbound' + Date.now();
+    const metadata = { name: DRIVE_FILENAME, mimeType: 'application/json' };
+    const body =
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+      `--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n` +
+      `--${boundary}--`;
+    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+      method:'POST',
+      headers:{ 'Authorization':`Bearer ${token}`, 'Content-Type': `multipart/related; boundary=${boundary}` },
+      body
+    });
+    if(!res.ok) throw new Error('Drive create failed: ' + res.status);
+    const data = await res.json();
+    driveFileId = data.id;
+    localStorage.setItem('bookshelf-drive-file-id', driveFileId);
+  }
+
+  localStorage.setItem('bookshelf-drive-last-sync', new Date().toISOString());
+}
+
+async function doDriveSync(interactive){
+  if(!driveClientId) return;
+  setDriveStatus('syncing');
+  try{
+    const token = await ensureDriveToken(interactive);
+    if(!token){ setDriveStatus('needs-reconnect'); return; }
+    await driveSaveBackup(token);
+    setDriveStatus('connected');
+  }catch(e){
+    setDriveStatus('error');
+  }
+}
+
+function scheduleDriveSync(){
+  if(!driveClientId) return;
+  clearTimeout(driveSyncTimer);
+  driveSyncTimer = setTimeout(() => doDriveSync(false), 3000);
+}
+
+function openDriveSettingsModal(){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <p>Google Drive setup</p>
+      <div class="settings-hint">
+        Paste the OAuth Client ID from your Google Cloud project below.
+        This is a one-time, free setup — ask your assistant for the console walkthrough if you haven't done it yet.
+      </div>
+      <span class="settings-field-label">OAuth Client ID</span>
+      <input type="text" class="edit-field" id="driveClientIdInput" placeholder="xxxxx.apps.googleusercontent.com" value="${escapeHtml(driveClientId)}">
+      <div class="modal-actions" style="margin-top:12px;">
+        <button class="modal-btn cancel" id="driveSettingsClose">Cancel</button>
+        <button class="modal-btn confirm" id="driveSettingsSave">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#driveSettingsClose').onclick = () => overlay.remove();
+  overlay.querySelector('#driveSettingsSave').onclick = () => {
+    const val = overlay.querySelector('#driveClientIdInput').value.trim();
+    driveClientId = val;
+    driveTokenClient = null;
+    driveToken = null;
+    localStorage.setItem('bookshelf-drive-client-id', driveClientId);
+    overlay.remove();
+    setDriveStatus('idle');
+    if(driveClientId) initDriveTokenClientIfNeeded();
+  };
+}
+
+document.getElementById('driveSettingsBtn').onclick = openDriveSettingsModal;
+document.getElementById('driveActionBtn').onclick = () => {
+  if(!driveClientId){
+    openDriveSettingsModal();
+    return;
+  }
+  doDriveSync(true);
+};
+
+initDriveTokenClientIfNeeded();
+setDriveStatus('idle');
+if(driveClientId){
+  doDriveSync(false);
+}
 
 render();
 </script>
