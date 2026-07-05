@@ -759,7 +759,7 @@ function normalizeLibrary(raw){
   }
   return {
     reading: (raw.reading || []).map(normalizeBook).sort((a, b) => new Date(b.dateStarted).getTime() - new Date(a.dateStarted).getTime()),
-    tbr: (raw.tbr || []).map(normalizeBook).sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()),
+    tbr: (raw.tbr || []).map(normalizeBook),
     read: (raw.read || []).map(normalizeBook).sort((a, b) => new Date(b.dateCompleted).getTime() - new Date(a.dateCompleted).getTime()),
   };
 }
