@@ -665,15 +665,11 @@
   <div class="empty" id="readEmpty">Devoured tales will rest here.</div>
 
   <div class="util-row">
-    <button class="util-btn" id="exportBtn">⤓ Export backup</button>
-    <button class="util-btn" id="importBtn">⤒ Import backup</button>
-  </div>
-  <div class="util-row" style="margin-top:8px; border-top:none; padding-top:0;">
     <button class="util-btn" id="saveFilesBtn">📁 Save to Files</button>
     <button class="util-btn" id="loadFilesBtn">📂 Load from Files</button>
     <input type="file" id="importFileInput" accept=".json,.txt,application/json,text/plain" style="display:none;">
   </div>
-  <div class="hint">Export before switching phones, then Import on the new one.<br>"Save to Files" lets you pick On My iPhone or iCloud Drive.<br>"Load from Files" reads your backup straight from a folder like Files/Books.<br>Add this page to your Home Screen for one-tap access.</div>
+  <div class="hint">"Save to Files" lets you pick On My iPhone or iCloud Drive.<br>"Load from Files" reads your backup straight from a folder like Files/Books.<br>Add this page to your Home Screen for one-tap access.</div>
 
   <div class="drive-panel">
     <div class="drive-row">
@@ -720,20 +716,14 @@ function flattenGrouped(grouped){
   return [...reading, ...tbr, ...read];
 }
 
-// Accepts either the new grouped shape or the old flat-array shape
-// (for backup files/pastes created before this change) and always
-// returns a flat array of normalized books.
+// Accepts the {reading, tbr, read} grouped shape and returns a flat,
+// normalized array of books for internal use.
 function normalizeBackupData(parsed){
-  let flat;
-  if(Array.isArray(parsed)){
-    flat = parsed; // legacy flat-array backup
-  } else if(parsed && typeof parsed === 'object' &&
-            (Array.isArray(parsed.reading) || Array.isArray(parsed.tbr) || Array.isArray(parsed.read))){
-    flat = flattenGrouped(parsed);
-  } else {
+  if(!parsed || typeof parsed !== 'object' ||
+     !(Array.isArray(parsed.reading) || Array.isArray(parsed.tbr) || Array.isArray(parsed.read))){
     throw new Error('Unrecognized backup format');
   }
-  return flat.map(normalizeBook);
+  return flattenGrouped(parsed).map(normalizeBook);
 }
 
 function load(){
@@ -1271,76 +1261,6 @@ document.getElementById('authorInput').addEventListener('keydown', e=>{
   if(e.key==='Enter') document.getElementById('addBtn').click();
 });
 
-function openBackupModal(mode){
-  const jsonStr = JSON.stringify(groupByStatus(books), null, 2);
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.innerHTML = `
-    <div class="modal-box">
-      <p>${mode==='export'
-        ? 'Copy this text and save it somewhere safe — Notes, iCloud, or email it to yourself. Paste it back in on your new phone.'
-        : 'Paste your backup text below, then load it.'}</p>
-      <textarea class="backup-textarea" id="backupTextarea" ${mode==='export' ? 'readonly' : ''} placeholder="Paste backup JSON here…">${mode==='export' ? escapeHtml(jsonStr) : ''}</textarea>
-      <div class="modal-actions">
-        <button class="modal-btn cancel" id="backupClose">Close</button>
-        <button class="modal-btn confirm" id="backupAction">${mode==='export' ? 'Copy to Clipboard' : 'Load Backup'}</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-
-  const ta = overlay.querySelector('#backupTextarea');
-  if(mode==='export'){
-    ta.focus();
-    ta.setSelectionRange(0, ta.value.length);
-  }
-
-  overlay.querySelector('#backupClose').onclick = () => overlay.remove();
-
-  overlay.querySelector('#backupAction').onclick = async () => {
-    if(mode === 'export'){
-      ta.focus();
-      ta.setSelectionRange(0, ta.value.length);
-      let copied = false;
-      try{
-        if(navigator.clipboard && navigator.clipboard.writeText){
-          await navigator.clipboard.writeText(jsonStr);
-          copied = true;
-        }
-      }catch(e){}
-      if(!copied){
-        try{ copied = document.execCommand('copy'); }catch(e){ copied = false; }
-      }
-      overlay.remove();
-      askInfo(copied
-        ? 'Copied! Paste it into Notes, an email, or iCloud to keep it safe.'
-        : 'Could not copy automatically — the text is already selected, so use your keyboard\'s Copy option.');
-    } else {
-      const text = ta.value.trim();
-      let incoming;
-      try{
-        incoming = normalizeBackupData(JSON.parse(text));
-      }catch(err){
-        askInfo('That didn\'t look like valid backup text — check that you copied the whole thing.');
-        return;
-      }
-      overlay.remove();
-      const replace = await askConfirm('Replace your current list with this backup? Choose Cancel to merge instead.');
-      if(replace){
-        books = incoming;
-      } else {
-        const existingIds = new Set(books.map(b=>b.id));
-        incoming.forEach(b => { if(!existingIds.has(b.id)) books.push(b); });
-      }
-      save(books);
-      render();
-      askInfo('Backup loaded.');
-    }
-  };
-}
-
-document.getElementById('exportBtn').onclick = () => openBackupModal('export');
-document.getElementById('importBtn').onclick = () => openBackupModal('import');
-
 document.getElementById('saveFilesBtn').onclick = async () => {
   const content = JSON.stringify(groupByStatus(books), null, 2);
   const stamp = new Date().toISOString().slice(0,10);
@@ -1355,7 +1275,7 @@ document.getElementById('saveFilesBtn').onclick = async () => {
   }catch(e){
     if(e.name === 'AbortError') return;
   }
-  openBackupModal('export');
+  askInfo('Saving to Files isn\'t available here — make sure you opened this page in Safari, then try again.');
 };
 
 document.getElementById('loadFilesBtn').onclick = () => {
@@ -1401,8 +1321,25 @@ const DRIVE_FILENAME = 'bookshelf-backup.json';
 let driveClientId = localStorage.getItem('bookshelf-drive-client-id') || '';
 let driveFileId = localStorage.getItem('bookshelf-drive-file-id') || null;
 let driveTokenClient = null;
-let driveToken = null;      // {access_token, expiresAt}
+let driveToken = loadPersistedDriveToken(); // {access_token, expiresAt} or null
 let driveSyncTimer = null;
+
+function loadPersistedDriveToken(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('bookshelf-drive-token') || 'null');
+    if(saved && saved.access_token && saved.expiresAt > Date.now()) return saved;
+  }catch(e){}
+  return null;
+}
+
+function persistDriveToken(token){
+  driveToken = token;
+  if(token){
+    localStorage.setItem('bookshelf-drive-token', JSON.stringify(token));
+  } else {
+    localStorage.removeItem('bookshelf-drive-token');
+  }
+}
 
 function setDriveStatus(status){
   const dot = document.getElementById('driveDot');
@@ -1458,7 +1395,7 @@ function requestDriveToken(interactive){
       if(settled) return;
       settled = true;
       if(resp && resp.access_token){
-        driveToken = { access_token: resp.access_token, expiresAt: Date.now() + (resp.expires_in*1000 - 60000) };
+        persistDriveToken({ access_token: resp.access_token, expiresAt: Date.now() + (resp.expires_in*1000 - 60000) });
         resolve(resp.access_token);
       } else {
         resolve(null);
@@ -1478,6 +1415,7 @@ function requestDriveToken(interactive){
 
 async function ensureDriveToken(interactive){
   if(driveToken && driveToken.expiresAt > Date.now()) return driveToken.access_token;
+  if(driveToken) persistDriveToken(null); // clear the stale/expired one
   return await requestDriveToken(interactive);
 }
 
@@ -1711,7 +1649,7 @@ function openDriveSettingsModal(){
     const val = overlay.querySelector('#driveClientIdInput').value.trim();
     driveClientId = val;
     driveTokenClient = null;
-    driveToken = null;
+    persistDriveToken(null);
     localStorage.setItem('bookshelf-drive-client-id', driveClientId);
     overlay.remove();
     setDriveStatus('idle');
