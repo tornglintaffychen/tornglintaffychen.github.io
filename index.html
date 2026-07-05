@@ -390,12 +390,19 @@
   .read-toggle.active-reading { border-color: var(--gold); color: #b0821a; background: rgba(227,189,111,0.08); }
   .read-toggle.active-read { background:linear-gradient(100deg, var(--pink), var(--mint)); color:#fff; border-color:transparent; }
 
-  .del{
+  .del, .move-btn{
     font-family:'IBM Plex Mono',monospace;
     font-size:10px;
     color:#c2b4d9;
     background:none;
     text-decoration:underline;
+  }
+  .move-btn {
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 0 2px;
+    color: var(--lilac);
   }
 
   .stamp-mark{
@@ -621,7 +628,6 @@ let currentInputMethod = 'manual';
 function load(){
   try{ 
     let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    // Migration helper for legacy objects without strict reading statuses
     return data.map(b => {
       if(b.read === true && !b.status) b.status = 'read';
       if(b.read === false && !b.status) b.status = 'tbr';
@@ -783,6 +789,36 @@ function setupInteractions() {
   document.querySelectorAll('[data-cancel-edit]').forEach(el=>{
     el.onclick = () => { editingId = null; render(); };
   });
+  document.querySelectorAll('[data-move]').forEach(el=>{
+    el.onclick = () => moveBookOrder(el.getAttribute('data-move'), el.getAttribute('data-dir'));
+  });
+}
+
+/* Accessible Mobile Reordering Logic (Option 1) */
+function moveBookOrder(id, direction) {
+  const currentBook = books.find(b => b.id === id);
+  if (!currentBook) return;
+
+  // Filter out the active sub-shelf list to know relative local positions
+  const sameShelfBooks = books.filter(b => b.status === currentBook.status);
+  const targetIndex = sameShelfBooks.findIndex(b => b.id === id);
+
+  if (direction === 'up' && targetIndex > 0) {
+    const swapWith = sameShelfBooks[targetIndex - 1];
+    const idxA = books.indexOf(currentBook);
+    const idxB = books.indexOf(swapWith);
+    books[idxA] = swapWith;
+    books[idxB] = currentBook;
+  } else if (direction === 'down' && targetIndex < sameShelfBooks.length - 1) {
+    const swapWith = sameShelfBooks[targetIndex + 1];
+    const idxA = books.indexOf(currentBook);
+    const idxB = books.indexOf(swapWith);
+    books[idxA] = swapWith;
+    books[idxB] = currentBook;
+  }
+
+  save(books);
+  render();
 }
 
 /* HTML5 Native Drag & Drop Logic for Reordering & Inter-shelf Movement */
@@ -838,7 +874,6 @@ function saveReorderedLists() {
       const id = el.getAttribute('data-id');
       const foundBook = books.find(b => b.id === id);
       if (foundBook) {
-        // Adapt target statuses dynamically if dropped on a new list
         if (foundBook.status !== shelfName) {
           foundBook.status = shelfName;
           foundBook.read = (shelfName === 'read');
@@ -850,7 +885,6 @@ function saveReorderedLists() {
     });
   });
 
-  // Re-append remaining elements that weren't inside standard components
   books.forEach(b => {
     if(!updatedBooks.some(ub => ub.id === b.id)) updatedBooks.push(b);
   });
@@ -917,7 +951,6 @@ function cardHtml(b){
     </div>`;
   }
 
-  // Display conditions for simple text notes on viewing card
   const notesMarkup = (b.notes && b.notes.trim()) 
     ? `<div class="book-notes">${escapeHtml(b.notes)}</div>` 
     : '';
@@ -956,6 +989,9 @@ function cardHtml(b){
           <button class="read-toggle ${b.status==='read'?'active-read':''}" data-change-status="${b.id}" data-status="read">✓ Read</button>
         </div>
         <span>
+          <button class="move-btn" data-move="${b.id}" data-dir="up">↑</button>
+          <button class="move-btn" data-move="${b.id}" data-dir="down">↓</button>
+          &nbsp;·&nbsp;
           <button class="edit-link" data-edit="${b.id}">edit</button>
           &nbsp;·&nbsp;
           <button class="del" data-del="${b.id}">remove</button>
@@ -1179,7 +1215,6 @@ function openBackupModal(mode){
         const existingIds = new Set(books.map(b=>b.id));
         incoming.forEach(b => { if(!existingIds.has(b.id)) books.push(b); });
       }
-      // Re-run migration map on custom raw imports
       books = books.map(b => {
         if(b.read === true && !b.status) b.status = 'read';
         if(b.read === false && !b.status) b.status = 'tbr';
