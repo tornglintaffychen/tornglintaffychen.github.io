@@ -455,7 +455,7 @@
 
 <header>
   <div class="eyebrow">Grimoire of Unread Tomes</div>
-  <h1>Stacks</h1>
+  <h1>Bookshelf</h1>
   <p>conjure your next read, one page at a time</p>
 </header>
 
@@ -499,7 +499,7 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'stacks-books-v1';
+const STORAGE_KEY = 'bookshelf-books-v1';
 
 function load(){
   try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
@@ -702,7 +702,7 @@ function toggleFormat(id, fmt){
 }
 
 async function deleteBook(id){
-  const ok = await askConfirm('Remove this book from your stacks?');
+  const ok = await askConfirm('Remove this book from your bookshelf?');
   if(!ok) return;
   books = books.filter(x=>x.id!==id);
   save(books);
@@ -821,7 +821,8 @@ document.getElementById('importBtn').onclick = () => openBackupModal('import');
 
 document.getElementById('saveFilesBtn').onclick = async () => {
   const content = JSON.stringify(books, null, 2);
-  const filename = 'bookshelf-backup.json';
+  const stamp = new Date().toISOString().slice(0,10);
+  const filename = `bookshelf-backup-${stamp}.json`;
 
   try{
     // iOS Safari's share sheet is picky about file types — plain text
