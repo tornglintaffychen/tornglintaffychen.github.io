@@ -83,6 +83,28 @@
 
   .wrap{max-width:520px;margin:0 auto;padding:0 14px;}
 
+  /* Input method tab layout */
+  .input-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .input-tab-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 5px 10px;
+    background: transparent;
+    border: 1px solid var(--card-edge);
+    border-radius: 6px;
+    color: var(--dim);
+    cursor: pointer;
+  }
+  .input-tab-btn.active {
+    background: var(--lilac);
+    color: #fff;
+    border-color: transparent;
+  }
+
   /* Add form */
   .add-card{
     position:relative;
@@ -119,7 +141,7 @@
     display:block;
   }
   .field-row{display:flex; gap:8px; margin-bottom:8px;}
-  input[type=text]{
+  input[type=text], input[type=date]{
     flex:1;
     font-family:'Quicksand',sans-serif;
     font-weight:500;
@@ -131,7 +153,7 @@
     color:var(--ink);
   }
   input[type=text]::placeholder{color:#b7a8ce;}
-  input[type=text]:focus{outline:2px solid var(--lilac); outline-offset:1px;}
+  input[type=text]:focus, input[type=date]:focus{outline:2px solid var(--lilac); outline-offset:1px;}
   button{
     font-family:'IBM Plex Mono',monospace;
     cursor:pointer;
@@ -200,7 +222,10 @@
     background:linear-gradient(90deg, var(--card-edge), transparent);
   }
 
-  /* Book card */
+  /* Book card & Drag styling */
+  .shelf-dropzone {
+    min-height: 20px;
+  }
   .book{
     position:relative;
     background:var(--card);
@@ -212,11 +237,18 @@
     gap:12px;
     box-shadow:0 8px 20px var(--shadow);
     overflow:hidden;
+    cursor: grab;
+    user-select: none;
   }
+  .book:active { cursor: dragging; }
+  .book.dragging { opacity: 0.4; border: 1px dashed var(--lilac); }
   .book::before{
     content:'';
     position:absolute; top:0; left:0; right:0; height:3px;
     background:linear-gradient(100deg, var(--lilac), var(--pink), var(--mint));
+  }
+  .book.reading::before{
+    background:linear-gradient(100deg, var(--mint), var(--gold));
   }
   .book.read{opacity:.78;}
   .cover{
@@ -262,12 +294,63 @@
   .book-links{
     font-family:'IBM Plex Mono',monospace;
     font-size:10.5px;
+    margin-bottom: 4px;
   }
   .book-links a{
     color:var(--pink);
     text-decoration:none;
     border-bottom:1px dotted var(--pink);
   }
+  .date-badge-row {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;
+    color: var(--dim);
+    margin: 4px 0 6px 0;
+  }
+  .stars{
+    display:flex;
+    gap:3px;
+    margin-top:8px;
+  }
+  .star{
+    font-size:16px;
+    line-height:1;
+    color:var(--card-edge);
+    cursor:pointer;
+    user-select:none;
+    transition:transform .1s ease;
+  }
+  .star.on{
+    background:linear-gradient(100deg, var(--lilac), var(--pink));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .star:active{transform:scale(1.2);}
+  .book-notes{
+    font-family:'Quicksand',sans-serif;
+    font-size:12.5px;
+    color:var(--dim);
+    background:#f9f5fd;
+    border-left:2px solid var(--card-edge);
+    padding:6px 9px;
+    border-radius:0 6px 6px 0;
+    margin:9px 0 0;
+    line-height:1.4;
+  }
+  .edit-notes{
+    width:100%;
+    min-height:65px;
+    resize:vertical;
+    font-family:'Quicksand',sans-serif;
+    margin-top:4px;
+    font-size:13px;
+    padding:6px;
+    border:1px solid var(--card-edge);
+    border-radius:6px;
+    background:#fff;
+  }
+
   .formats{display:flex; gap:5px; margin-top:9px; flex-wrap:wrap;}
   .fmt-tab{
     font-family:'IBM Plex Mono',monospace;
@@ -286,24 +369,24 @@
     color:#fff;
     border-color:transparent;
   }
-  .row-bottom{display:flex; justify-content:space-between; align-items:center; margin-top:10px;}
+  .row-bottom{display:flex; justify-content:space-between; align-items:center; margin-top:10px; gap:4px; flex-wrap:wrap;}
+  .status-actions{display:flex; gap:4px;}
 
   .read-toggle{
     font-family:'IBM Plex Mono',monospace;
     font-size:10px;
-    letter-spacing:.08em;
+    letter-spacing:.03em;
     text-transform:uppercase;
-    padding:6px 10px;
-    border:1.5px solid var(--pink);
-    color:#c9679e;
+    padding:6px 8px;
+    border:1.5px solid var(--card-edge);
+    color:var(--dim);
     background:transparent;
     border-radius:12px;
   }
-  .read-toggle.on{
-    background:linear-gradient(100deg, var(--pink), var(--mint));
-    color:#fff;
-    border-color:transparent;
-  }
+  .read-toggle.active-tbr { border-color: var(--lilac); color: var(--lilac); }
+  .read-toggle.active-reading { border-color: var(--gold); color: #b0821a; background: rgba(227,189,111,0.08); }
+  .read-toggle.active-read { background:linear-gradient(100deg, var(--pink), var(--mint)); color:#fff; border-color:transparent; }
+
   .del{
     font-family:'IBM Plex Mono',monospace;
     font-size:10px;
@@ -325,6 +408,7 @@
     transform:rotate(20deg) scale(0.3);
     opacity:0;
     transition:opacity .3s ease, transform .35s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
   }
   .book.read .stamp-mark{opacity:1; transform:rotate(20deg) scale(1);}
 
@@ -336,6 +420,9 @@
     font-size:15px;
     padding:22px 10px;
     opacity:.85;
+    border: 1px dashed var(--card-edge);
+    border-radius:8px;
+    margin-bottom: 12px;
   }
 
   .edit-field{
@@ -349,7 +436,14 @@
     color:var(--ink);
     margin-bottom:6px;
   }
-  .edit-actions{display:flex; gap:8px; margin-top:2px;}
+  .edit-label-sm {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--dim);
+    display: block;
+    margin: 4px 0 2px;
+  }
+  .edit-actions{display:flex; gap:8px; margin-top:10px;}
   .edit-actions button{
     font-size:10px;
     letter-spacing:.08em;
@@ -462,13 +556,28 @@
 <div class="wrap">
 
   <div class="add-card">
-    <span class="label">Bind a new title to your shelf</span>
-    <div class="field-row">
-      <input type="text" id="titleInput" placeholder="Book title" autocomplete="off">
+    <div class="input-tabs">
+      <button class="input-tab-btn active" id="tabManual" onclick="switchInputMethod('manual')">Manual Entry</button>
+      <button class="input-tab-btn" id="tabGoodreads" onclick="switchInputMethod('goodreads')">Goodreads Link</button>
     </div>
-    <div class="field-row">
-      <input type="text" id="authorInput" placeholder="Author (optional)" autocomplete="off">
+
+    <div id="manualInputFields">
+      <span class="label">Bind a new title to your shelf</span>
+      <div class="field-row">
+        <input type="text" id="titleInput" placeholder="Book title" autocomplete="off">
+      </div>
+      <div class="field-row">
+        <input type="text" id="authorInput" placeholder="Author (optional)" autocomplete="off">
+      </div>
     </div>
+
+    <div id="goodreadsInputField" style="display: none;">
+      <span class="label">Summon book via URL</span>
+      <div class="field-row">
+        <input type="text" id="goodreadsUrlInput" placeholder="https://www.goodreads.com/book/show/..." autocomplete="off">
+      </div>
+    </div>
+
     <button class="btn-add" id="addBtn">＋ Add to Stack</button>
   </div>
 
@@ -478,11 +587,15 @@
   </div>
 
   <div class="shelf-label">To Be Read</div>
-  <div id="tbrList"></div>
+  <div id="tbrList" class="shelf-dropzone" data-shelf="tbr"></div>
   <div class="empty" id="tbrEmpty">The shelf is empty — summon your first title above.</div>
 
+  <div class="shelf-label">Reading Now</div>
+  <div id="readingList" class="shelf-dropzone" data-shelf="reading"></div>
+  <div class="empty" id="readingEmpty">Currently tracking no active adventures.</div>
+
   <div class="shelf-label">Already Read</div>
-  <div id="readList"></div>
+  <div id="readList" class="shelf-dropzone" data-shelf="read"></div>
   <div class="empty" id="readEmpty">Devoured tales will rest here.</div>
 
   <div class="util-row">
@@ -499,10 +612,19 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'bookshelf-books-v1';
+const STORAGE_KEY = 'bookshelf-books-v2';
+let currentInputMethod = 'manual';
 
 function load(){
-  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  try{ 
+    let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    return data.map(b => {
+      if(b.read === true && !b.status) b.status = 'read';
+      if(b.read === false && !b.status) b.status = 'tbr';
+      if(!b.formats) b.formats = [];
+      return b;
+    });
+  }
   catch(e){ return []; }
 }
 function save(books){
@@ -513,6 +635,14 @@ let books = load();
 let editingId = null;
 
 function uid(){ return 'b' + Date.now() + Math.random().toString(16).slice(2,8); }
+
+function switchInputMethod(method) {
+  currentInputMethod = method;
+  document.getElementById('tabManual').classList.toggle('active', method === 'manual');
+  document.getElementById('tabGoodreads').classList.toggle('active', method === 'goodreads');
+  document.getElementById('manualInputFields').style.display = method === 'manual' ? 'block' : 'none';
+  document.getElementById('goodreadsInputField').style.display = method === 'goodreads' ? 'block' : 'none';
+}
 
 function askConfirm(message){
   return new Promise(resolve=>{
@@ -539,10 +669,27 @@ function askInfo(message){
 }
 
 function goodreadsUrl(title, author){
-  // Goodreads' free-text search matches much more reliably on title alone;
-  // combining title+author into one query string often returns 0 results.
-  const q = encodeURIComponent(title);
+  const q = encodeURIComponent(title + (author ? ' ' + author : ''));
   return `https://www.goodreads.com/search?q=${q}`;
+}
+
+function parseGoodreadsUrl(url) {
+  try {
+    const urlObj = new URL(url);
+    if (!urlObj.hostname.includes('goodreads.com')) return null;
+    
+    const pathParts = urlObj.pathname.split('/');
+    const showIndex = pathParts.indexOf('show');
+    if (showIndex !== -1 && pathParts[showIndex + 1]) {
+      let rawTitleData = pathParts[showIndex + 1];
+      // Strip numbers at the start followed by a hyphen or period
+      let cleanTitle = rawTitleData.replace(/^\d+[\.-]/, '').replace(/-/g, ' ');
+      // Capitalize to title case
+      cleanTitle = cleanTitle.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      if (cleanTitle) return { title: cleanTitle, author: '' };
+    }
+  } catch(e) {}
+  return null;
 }
 
 async function searchOpenLibrary(title, author){
@@ -559,8 +706,6 @@ async function searchOpenLibrary(title, author){
 async function fetchCover(title, author){
   try{
     let doc = await searchOpenLibrary(title, author);
-    // If the title+author combo found nothing (or nothing with a cover),
-    // retry title-only — structured author filtering can be too strict.
     if((!doc || !doc.cover_i) && author){
       const titleOnly = await searchOpenLibrary(title, '');
       if(titleOnly && (!doc || titleOnly.cover_i)) doc = titleOnly;
@@ -574,22 +719,33 @@ async function fetchCover(title, author){
 }
 
 function render(){
-  const tbr = books.filter(b => !b.read);
-  const read = books.filter(b => b.read);
+  const tbr = books.filter(b => b.status === 'tbr');
+  const reading = books.filter(b => b.status === 'reading');
+  const read = books.filter(b => b.status === 'read');
   const isFreshStart = books.length === 0;
 
   document.getElementById('freshStartCta').style.display = isFreshStart ? 'block' : 'none';
   document.getElementById('tbrEmpty').style.display = (!isFreshStart && !tbr.length) ? 'block' : 'none';
+  document.getElementById('readingEmpty').style.display = (!isFreshStart && !reading.length) ? 'block' : 'none';
   document.getElementById('readEmpty').style.display = (!isFreshStart && !read.length) ? 'block' : 'none';
 
   document.getElementById('tbrList').innerHTML = tbr.map(cardHtml).join('');
+  document.getElementById('readingList').innerHTML = reading.map(cardHtml).join('');
   document.getElementById('readList').innerHTML = read.map(cardHtml).join('');
 
-  document.querySelectorAll('[data-toggle-read]').forEach(el=>{
-    el.onclick = () => toggleRead(el.getAttribute('data-toggle-read'));
+  setupInteractions();
+  setupDragAndDrop();
+}
+
+function setupInteractions() {
+  document.querySelectorAll('[data-change-status]').forEach(el=>{
+    el.onclick = () => setBookStatus(el.getAttribute('data-change-status'), el.getAttribute('data-status'));
   });
   document.querySelectorAll('[data-toggle-fmt]').forEach(el=>{
     el.onclick = () => toggleFormat(el.getAttribute('data-toggle-fmt'), el.getAttribute('data-fmt'));
+  });
+  document.querySelectorAll('[data-rate]').forEach(el=>{
+    el.onclick = () => setRating(el.getAttribute('data-rate'), Number(el.getAttribute('data-star')));
   });
   document.querySelectorAll('[data-del]').forEach(el=>{
     el.onclick = () => deleteBook(el.getAttribute('data-del'));
@@ -603,6 +759,92 @@ function render(){
   document.querySelectorAll('[data-cancel-edit]').forEach(el=>{
     el.onclick = () => { editingId = null; render(); };
   });
+}
+
+function setupDragAndDrop() {
+  const shelfLists = document.querySelectorAll('.shelf-dropzone');
+  const items = document.querySelectorAll('.book');
+
+  items.forEach(item => {
+    item.addEventListener('dragstart', () => {
+      item.classList.add('dragging');
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      saveReorderedLists();
+    });
+  });
+
+  shelfLists.forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      const afterElement = getDragAfterElement(zone, e.clientY);
+      const draggingItem = document.querySelector('.dragging');
+      if (afterElement == null) {
+        zone.appendChild(draggingItem);
+      } else {
+        zone.insertBefore(draggingItem, afterElement);
+      }
+    });
+  });
+}
+
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('.book:not(.dragging)')];
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset: offset, element: child };
+    } else {
+      return closest;
+    }
+  }, { offset: -Infinity }).element;
+}
+
+function saveReorderedLists() {
+  const updatedBooks = [];
+  const shelves = ['tbr', 'reading', 'read'];
+
+  shelves.forEach(shelfName => {
+    const zone = document.querySelector(`.shelf-dropzone[data-shelf="${shelfName}"]`);
+    const shelfItems = zone.querySelectorAll('.book');
+    shelfItems.forEach(el => {
+      const id = el.getAttribute('data-id');
+      const foundBook = books.find(b => b.id === id);
+      if (foundBook) {
+        if (foundBook.status !== shelfName) {
+          foundBook.status = shelfName;
+          foundBook.read = (shelfName === 'read');
+          if (shelfName === 'reading' && !foundBook.dateStarted) foundBook.dateStarted = new Date().toISOString().slice(0, 10);
+          if (shelfName === 'read' && !foundBook.dateCompleted) foundBook.dateCompleted = new Date().toISOString().slice(0, 10);
+        }
+        updatedBooks.push(foundBook);
+      }
+    });
+  });
+
+  books.forEach(b => {
+    if(!updatedBooks.some(ub => ub.id === b.id)) updatedBooks.push(b);
+  });
+
+  books = updatedBooks;
+  save(books);
+  render();
+}
+
+function starsHtml(b){
+  let out = '<div class="stars">';
+  for(let i=1; i<=5; i++){
+    out += `<span class="star ${i<=(b.rating||0) ? 'on' : ''}" data-rate="${b.id}" data-star="${i}">★</span>`;
+  }
+  out += '</div>';
+  return out;
+}
+
+function formatDate(isoStr) {
+  if (!isoStr) return '';
+  return isoStr.slice(0, 10);
 }
 
 function cardHtml(b){
@@ -619,32 +861,75 @@ function cardHtml(b){
 
   if(b.id === editingId){
     return `
-    <div class="book">
+    <div class="book" draggable="true" data-id="${b.id}">
       <div class="cover">${coverMarkup}</div>
       <div class="book-info">
+        <label class="edit-label-sm">Title</label>
         <input class="edit-field" id="editTitle-${b.id}" type="text" value="${escapeHtml(b.title)}" placeholder="Title">
+        
+        <label class="edit-label-sm">Author</label>
         <input class="edit-field" id="editAuthor-${b.id}" type="text" value="${escapeHtml(b.author||'')}" placeholder="Author">
+        
+        <label class="edit-label-sm">Goodreads Link</label>
+        <input class="edit-field" id="editGoodreads-${b.id}" type="text" value="${escapeHtml(b.goodreads||'')}" placeholder="Goodreads URL">
+
+        <label class="edit-label-sm">Cover Image URL</label>
+        <input class="edit-field" id="editCover-${b.id}" type="text" value="${escapeHtml(b.cover||'')}" placeholder="Cover URL">
+
+        <label class="edit-label-sm">Date Started</label>
+        <input class="edit-field" id="editDateStarted-${b.id}" type="date" value="${formatDate(b.dateStarted)}">
+
+        <label class="edit-label-sm">Date Completed</label>
+        <input class="edit-field" id="editDateCompleted-${b.id}" type="date" value="${formatDate(b.dateCompleted)}">
+
+        <label class="edit-label-sm">Notes</label>
+        <textarea class="edit-notes" id="editNotes-${b.id}" placeholder="Thoughts, quotes, or shelf notes...">${escapeHtml(b.notes||'')}</textarea>
+
         <div class="edit-actions">
-          <button class="save-btn" data-save="${b.id}">Save</button>
+          <button class="save-btn" data-save="${b.id}">Save Changes</button>
           <button class="cancel-btn" data-cancel-edit="${b.id}">Cancel</button>
         </div>
       </div>
     </div>`;
   }
 
+  const notesMarkup = (b.notes && b.notes.trim()) 
+    ? `<div class="book-notes">${escapeHtml(b.notes)}</div>` 
+    : '';
+
+  let datesMarkup = '';
+  if (b.status === 'reading' && b.dateStarted) {
+    datesMarkup = `<div class="date-badge-row">⏳ Started: ${formatDate(b.dateStarted)}</div>`;
+  } else if (b.status === 'read') {
+    const startStr = b.dateStarted ? `Started: ${formatDate(b.dateStarted)} · ` : '';
+    const endStr = b.dateCompleted ? `Finished: ${formatDate(b.dateCompleted)}` : 'Finished';
+    datesMarkup = `<div class="date-badge-row">✨ ${startStr}${endStr}</div>`;
+  }
+
   return `
-  <div class="book ${b.read?'read':''}">
+  <div class="book ${b.status==='read'?'read':''} ${b.status==='reading'?'reading':''}" draggable="true" data-id="${b.id}">
     <div class="stamp-mark">☾</div>
     <div class="cover">${coverMarkup}</div>
     <div class="book-info">
       <p class="book-title">${escapeHtml(b.title)}</p>
       <p class="book-author">${escapeHtml(b.author||'')}</p>
-      <div class="book-links"><a href="${b.goodreads}" target="_blank" rel="noopener">Goodreads ↗</a></div>
+      <div class="book-links"><a href="${escapeHtml(b.goodreads || '#')}" target="_blank" rel="noopener">Goodreads ↗</a></div>
+      
+      ${datesMarkup}
+      ${starsHtml(b)}
+      
       <div class="formats">
-        ${fmts.map(([key,label])=>`<span class="fmt-tab ${b.formats.includes(key)?'on':''}" data-toggle-fmt="${b.id}" data-fmt="${key}">${label}</span>`).join('')}
+        ${fmts.map(([key,label])=>`<span class="fmt-tab ${b.formats && b.formats.includes(key)?'on':''}" data-toggle-fmt="${b.id}" data-fmt="${key}">${label}</span>`).join('')}
       </div>
+      
+      ${notesMarkup}
+      
       <div class="row-bottom">
-        <button class="read-toggle ${b.read?'on':''}" data-toggle-read="${b.id}">${b.read?'✓ Read':'Mark read'}</button>
+        <div class="status-actions">
+          <button class="read-toggle ${b.status==='tbr'?'active-tbr':''}" data-change-status="${b.id}" data-status="tbr">TBR</button>
+          <button class="read-toggle ${b.status==='reading'?'active-reading':''}" data-change-status="${b.id}" data-status="reading">Reading</button>
+          <button class="read-toggle ${b.status==='read'?'active-read':''}" data-change-status="${b.id}" data-status="read">✓ Read</button>
+        </div>
         <span>
           <button class="edit-link" data-edit="${b.id}">edit</button>
           &nbsp;·&nbsp;
@@ -658,18 +943,31 @@ function cardHtml(b){
 async function saveEdit(id){
   const b = books.find(x=>x.id===id);
   if(!b) return;
+  
   const newTitle = document.getElementById(`editTitle-${id}`).value.trim();
   const newAuthor = document.getElementById(`editAuthor-${id}`).value.trim();
+  const newGoodreads = document.getElementById(`editGoodreads-${id}`).value.trim();
+  const newCover = document.getElementById(`editCover-${id}`).value.trim();
+  const newNotes = document.getElementById(`editNotes-${id}`).value.trim();
+  const newStart = document.getElementById(`editDateStarted-${id}`).value;
+  const newComplete = document.getElementById(`editDateCompleted-${id}`).value;
+
   if(!newTitle) return;
   const titleChanged = newTitle !== b.title || newAuthor !== (b.author||'');
+  
   b.title = newTitle;
   b.author = newAuthor;
-  b.goodreads = goodreadsUrl(b.title, b.author);
+  b.goodreads = newGoodreads || goodreadsUrl(b.title, b.author);
+  b.cover = newCover;
+  b.notes = newNotes;
+  b.dateStarted = newStart ? new Date(newStart).toISOString() : null;
+  b.dateCompleted = newComplete ? new Date(newComplete).toISOString() : null;
+  
   editingId = null;
   save(books);
   render();
 
-  if(titleChanged){
+  if(titleChanged && !newGoodreads && !newCover){
     const info = await fetchCover(b.title, b.author);
     if(info){
       b.cover = info.cover;
@@ -683,11 +981,21 @@ function escapeHtml(s){
   return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-function toggleRead(id){
+function setBookStatus(id, targetStatus){
   const b = books.find(x=>x.id===id);
   if(!b) return;
-  b.read = !b.read;
-  b.dateRead = b.read ? new Date().toISOString() : null;
+  
+  b.status = targetStatus;
+  b.read = (targetStatus === 'read');
+  
+  if(targetStatus === 'reading' && !b.dateStarted) {
+    b.dateStarted = new Date().toISOString();
+  }
+  if(targetStatus === 'read' && !b.dateCompleted) {
+    b.dateCompleted = new Date().toISOString();
+    if(!b.dateStarted) b.dateStarted = new Date().toISOString();
+  }
+  
   save(books);
   render();
 }
@@ -695,8 +1003,17 @@ function toggleRead(id){
 function toggleFormat(id, fmt){
   const b = books.find(x=>x.id===id);
   if(!b) return;
+  if(!b.formats) b.formats = [];
   const i = b.formats.indexOf(fmt);
   if(i>-1) b.formats.splice(i,1); else b.formats.push(fmt);
+  save(books);
+  render();
+}
+
+function setRating(id, star){
+  const b = books.find(x=>x.id===id);
+  if(!b) return;
+  b.rating = (b.rating === star) ? 0 : star;
   save(books);
   render();
 }
@@ -710,34 +1027,61 @@ async function deleteBook(id){
 }
 
 document.getElementById('addBtn').onclick = async () => {
-  const titleInput = document.getElementById('titleInput');
-  const authorInput = document.getElementById('authorInput');
-  const title = titleInput.value.trim();
-  const author = authorInput.value.trim();
-  if(!title) { titleInput.focus(); return; }
+  let title = '';
+  let author = '';
+  let link = '';
+
+  if (currentInputMethod === 'manual') {
+    const titleInput = document.getElementById('titleInput');
+    const authorInput = document.getElementById('authorInput');
+    title = titleInput.value.trim();
+    author = authorInput.value.trim();
+    if(!title) { titleInput.focus(); return; }
+    link = goodreadsUrl(title, author);
+    titleInput.value=''; authorInput.value='';
+  } else {
+    const grInput = document.getElementById('goodreadsUrlInput');
+    link = grInput.value.trim();
+    if(!link) { grInput.focus(); return; }
+    
+    const parsed = parseGoodreadsUrl(link);
+    if(parsed) {
+      title = parsed.title;
+      author = parsed.author;
+    } else {
+      title = "Linked Goodreads Book";
+    }
+    grInput.value = '';
+  }
 
   const book = {
     id: uid(),
     title, author,
     cover: null,
-    goodreads: goodreadsUrl(title, author),
+    goodreads: link,
     formats: [],
+    rating: 0,
+    notes: '',
+    status: 'tbr',
     read: false,
     dateAdded: new Date().toISOString(),
-    dateRead: null
+    dateStarted: null,
+    dateCompleted: null
   };
+  
   books.unshift(book);
   save(books);
-  titleInput.value=''; authorInput.value='';
   render();
 
-  const info = await fetchCover(title, author);
-  if(info){
-    book.cover = info.cover;
-    if(!author && info.author) book.author = info.author;
-    book.goodreads = goodreadsUrl(book.title, book.author);
-    save(books);
-    render();
+  if(title && title !== "Linked Goodreads Book"){
+    const info = await fetchCover(title, author);
+    if(info){
+      book.cover = info.cover;
+      if(!author && info.author) book.author = info.author;
+      if (currentInputMethod === 'manual') book.goodreads = goodreadsUrl(book.title, book.author);
+      save(books);
+      render();
+    }
   }
 };
 
@@ -745,6 +1089,9 @@ document.getElementById('titleInput').addEventListener('keydown', e=>{
   if(e.key==='Enter') document.getElementById('addBtn').click();
 });
 document.getElementById('authorInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter') document.getElementById('addBtn').click();
+});
+document.getElementById('goodreadsUrlInput').addEventListener('keydown', e=>{
   if(e.key==='Enter') document.getElementById('addBtn').click();
 });
 
@@ -809,6 +1156,11 @@ function openBackupModal(mode){
         const existingIds = new Set(books.map(b=>b.id));
         incoming.forEach(b => { if(!existingIds.has(b.id)) books.push(b); });
       }
+      books = books.map(b => {
+        if(b.read === true && !b.status) b.status = 'read';
+        if(b.read === false && !b.status) b.status = 'tbr';
+        return b;
+      });
       save(books);
       render();
       askInfo('Backup loaded.');
@@ -825,19 +1177,14 @@ document.getElementById('saveFilesBtn').onclick = async () => {
   const filename = `bookshelf-backup-${stamp}.json`;
 
   try{
-    // iOS Safari's share sheet is picky about file types — plain text
-    // shares reliably, where application/json can silently fail — but we
-    // keep the .json name so it's easy to recognize and reload later.
     const file = new File([content], filename, {type:'text/plain'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({files:[file], title:'Bookshelf backup'});
       return;
     }
   }catch(e){
-    if(e.name === 'AbortError') return; // user cancelled the share sheet — not an error
+    if(e.name === 'AbortError') return;
   }
-
-  // Fall back to the reliable copy/paste flow rather than a dead end.
   openBackupModal('export');
 };
 
@@ -869,10 +1216,15 @@ document.getElementById('importFileInput').onchange = (e) => {
       const existingIds = new Set(books.map(b=>b.id));
       incoming.forEach(b => { if(!existingIds.has(b.id)) books.push(b); });
     }
+    books = books.map(b => {
+      if(b.read === true && !b.status) b.status = 'read';
+      if(b.read === false && !b.status) b.status = 'tbr';
+      return b;
+    });
     save(books);
     render();
     askInfo('Backup loaded.');
-    e.target.value = ''; // reset so picking the same file again still triggers this
+    e.target.value = '';
   };
   reader.readAsText(file);
 };
