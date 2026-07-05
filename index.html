@@ -13,27 +13,29 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Quicksand:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#4a3566;
-    --dim:#8c7aab;
-    --card:#ffffff;
-    --card-edge:#ecdff5;
-    --bg-a:#f6f0ff;
-    --bg-b:#fdf1f8;
-    --bg-c:#eefaf7;
-    --lilac:#b48ee6;
-    --pink:#f2a8d0;
-    --mint:#8fe0c4;
-    --gold:#e3bd6f;
-    --shadow: rgba(150,110,190,0.16);
+    --ink:#33283f;
+    --dim:#7d6f92;
+    --card:#fffaf0;
+    --card-edge:#ddc99a;
+    --leading:#3a2c4a;
+    --bg-a:#eaf6ec;
+    --bg-b:#fdf2df;
+    --bg-c:#eaf1fb;
+    --sapphire:#3f74ab;
+    --emerald:#3f9166;
+    --ruby:#b8425f;
+    --amber:#d9a441;
+    --amethyst:#8462c4;
+    --shadow: rgba(58,44,74,0.18);
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0; background-color:#fffdfc; color-scheme:light;}
+  html,body{margin:0;padding:0; background-color:#fffdf6; color-scheme:light;}
   body{
     background:
-      radial-gradient(60% 45% at 12% 0%, var(--bg-a) 0%, transparent 60%),
-      radial-gradient(55% 40% at 90% 8%, var(--bg-b) 0%, transparent 60%),
-      radial-gradient(50% 40% at 50% 100%, var(--bg-c) 0%, transparent 60%),
-      #fffdfc;
+      radial-gradient(60% 45% at 10% 0%, var(--bg-a) 0%, transparent 60%),
+      radial-gradient(55% 40% at 92% 6%, var(--bg-b) 0%, transparent 60%),
+      radial-gradient(55% 45% at 50% 100%, var(--bg-c) 0%, transparent 60%),
+      #fffdf6;
     min-height:100vh;
     font-family:'Quicksand',sans-serif;
     color:var(--ink);
@@ -49,7 +51,7 @@
     font-size:10.5px;
     letter-spacing:.22em;
     text-transform:uppercase;
-    color:var(--gold);
+    color:var(--amber);
     margin-bottom:8px;
   }
   header h1{
@@ -58,12 +60,13 @@
     font-size:52px;
     margin:0;
     letter-spacing:.03em;
-    background:linear-gradient(100deg, var(--lilac), var(--pink) 35%, var(--mint) 60%, var(--lilac) 90%);
-    background-size:300% 100%;
+    background:linear-gradient(100deg, var(--sapphire), var(--emerald) 30%, var(--amber) 55%, var(--ruby) 78%, var(--amethyst));
+    background-size:320% 100%;
     -webkit-background-clip:text;
     background-clip:text;
     color:transparent;
-    animation:shimmer 7s ease-in-out infinite alternate;
+    -webkit-text-stroke:1px rgba(58,44,74,0.25);
+    animation:shimmer 8s ease-in-out infinite alternate;
   }
   @keyframes shimmer{
     from{background-position:0% 50%;}
@@ -101,7 +104,7 @@
     cursor: pointer;
   }
   .input-tab-btn.active {
-    background: var(--lilac);
+    background: var(--sapphire);
     color: #fff;
     border-color: transparent;
   }
@@ -113,31 +116,32 @@
     border-radius:4px 4px 16px 16px;
     padding:18px 16px 14px;
     box-shadow:0 14px 30px var(--shadow);
-    border:1px solid var(--card-edge);
-    border-top:3px solid transparent;
+    border:1.5px solid var(--leading);
+    border-top:4px solid transparent;
     background-image:
       linear-gradient(var(--card), var(--card)),
-      linear-gradient(100deg, var(--lilac), var(--pink), var(--mint));
+      repeating-linear-gradient(90deg,
+        var(--sapphire) 0 20%, var(--emerald) 20% 40%,
+        var(--amber) 40% 60%, var(--ruby) 60% 80%, var(--amethyst) 80% 100%);
     background-origin:border-box;
     background-clip:padding-box, border-box;
     margin-bottom:24px;
   }
   .add-card::before, .add-card::after{
-    content:'✦';
+    content:'🌿';
     position:absolute;
-    top:-9px;
-    color:var(--gold);
-    font-size:13px;
-    text-shadow:0 0 6px rgba(227,189,111,0.6);
+    top:-11px;
+    font-size:14px;
+    filter:drop-shadow(0 1px 1px rgba(58,44,74,0.3));
   }
-  .add-card::before{left:10px;}
-  .add-card::after{right:10px;}
+  .add-card::before{left:8px;}
+  .add-card::after{right:8px; transform:scaleX(-1);}
   .add-card .label{
     font-family:'IBM Plex Mono',monospace;
     font-size:10px;
     letter-spacing:.14em;
     text-transform:uppercase;
-    color:var(--lilac);
+    color:var(--sapphire);
     margin-bottom:10px;
     display:block;
   }
@@ -150,7 +154,7 @@
     padding:10px 11px;
     border:1px solid var(--card-edge);
     border-radius:8px;
-    background:#fbf7ff;
+    background:#fffef9;
     color:var(--ink);
   }
   textarea.html-dump-area {
@@ -160,16 +164,17 @@
     font-size: 11px;
     resize: vertical;
   }
-  input[type=text]::placeholder, textarea.html-dump-area::placeholder{color:#b7a8ce;}
-  input[type=text]:focus, input[type=date]:focus, textarea.html-dump-area:focus{outline:2px solid var(--lilac); outline-offset:1px;}
+  input[type=text]::placeholder, textarea.html-dump-area::placeholder{color:#b7a58f;}
+  input[type=text]:focus, input[type=date]:focus, textarea.html-dump-area:focus{outline:2px solid var(--sapphire); outline-offset:1px;}
   button{
     font-family:'IBM Plex Mono',monospace;
     cursor:pointer;
     border:none;
   }
   .btn-add{
+    position:relative;
     width:100%;
-    background:linear-gradient(100deg, var(--lilac), var(--pink));
+    background:linear-gradient(100deg, var(--sapphire), var(--emerald));
     color:#fff;
     padding:11px;
     border-radius:8px;
@@ -177,9 +182,24 @@
     letter-spacing:.1em;
     text-transform:uppercase;
     margin-top:4px;
-    box-shadow:0 6px 16px rgba(180,142,230,0.4);
+    box-shadow:0 6px 16px rgba(63,116,171,0.35);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
   }
   .btn-add:active{filter:brightness(0.95);}
+  .btn-add:disabled{opacity:.75; cursor:default;}
+  .btn-add .spinner{
+    display:none;
+    width:13px; height:13px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,0.4);
+    border-top-color:#fff;
+    animation:spin .7s linear infinite;
+  }
+  .btn-add.loading .spinner{display:inline-block;}
+  @keyframes spin{ to{ transform:rotate(360deg); } }
 
   /* Section headers */
   .fresh-cta{
@@ -190,11 +210,13 @@
     text-align:center;
     margin-bottom:24px;
     box-shadow:0 14px 30px var(--shadow);
-    border:1px solid var(--card-edge);
-    border-top:3px solid transparent;
+    border:1.5px solid var(--leading);
+    border-top:4px solid transparent;
     background-image:
       linear-gradient(var(--card), var(--card)),
-      linear-gradient(100deg, var(--lilac), var(--pink), var(--mint));
+      repeating-linear-gradient(90deg,
+        var(--sapphire) 0 20%, var(--emerald) 20% 40%,
+        var(--amber) 40% 60%, var(--ruby) 60% 80%, var(--amethyst) 80% 100%);
     background-origin:border-box;
     background-clip:padding-box, border-box;
   }
@@ -212,9 +234,10 @@
     padding:9px 18px;
   }
 
+  .shelf-section{margin-bottom:6px;}
   .shelf-label{
     font-family:'IBM Plex Mono',monospace;
-    color:var(--lilac);
+    color:var(--sapphire);
     font-size:11px;
     letter-spacing:.16em;
     text-transform:uppercase;
@@ -222,6 +245,25 @@
     display:flex;
     align-items:center;
     gap:8px;
+    cursor:pointer;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .shelf-label .chevron{
+    display:inline-block;
+    font-size:9px;
+    transition:transform .2s ease;
+    color:var(--dim);
+  }
+  .shelf-section.collapsed .chevron{transform:rotate(-90deg);}
+  .shelf-count{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;
+    color:var(--dim);
+    background:var(--card);
+    border:1px solid var(--card-edge);
+    border-radius:8px;
+    padding:1px 6px;
   }
   .shelf-label::after{
     content:'';
@@ -229,12 +271,14 @@
     height:1px;
     background:linear-gradient(90deg, var(--card-edge), transparent);
   }
+  .shelf-body{overflow:hidden;}
+  .shelf-section.collapsed .shelf-body{display:none;}
 
   /* Book card */
   .book{
     position:relative;
     background:var(--card);
-    border:1px solid var(--card-edge);
+    border:1.5px solid var(--leading);
     border-radius:3px 3px 12px 12px;
     padding:12px;
     margin-bottom:12px;
@@ -244,23 +288,25 @@
     overflow:hidden;
     cursor: grab;
   }
-  .book:active{cursor: dragging;}
-  .book.dragging{opacity: 0.4; border: 1px dashed var(--lilac);}
+  .book:active{cursor: grabbing;}
+  .book.dragging{opacity: 0.4; border: 1.5px dashed var(--sapphire);}
   .book::before{
     content:'';
-    position:absolute; top:0; left:0; right:0; height:3px;
-    background:linear-gradient(100deg, var(--lilac), var(--pink), var(--mint));
+    position:absolute; top:0; left:0; right:0; height:4px;
+    background:repeating-linear-gradient(90deg,
+      var(--sapphire) 0 20%, var(--emerald) 20% 40%,
+      var(--amber) 40% 60%, var(--ruby) 60% 80%, var(--amethyst) 80% 100%);
   }
-  .book.read{opacity:.78;}
+  .book.read{opacity:.85;}
   .book.reading::before{
-    background:linear-gradient(100deg, var(--mint), var(--gold));
+    background:repeating-linear-gradient(90deg, var(--amber) 0 50%, var(--ruby) 50% 100%);
   }
   .cover{
     position:relative;
     width:52px;
     height:78px;
     flex:none;
-    background:#f4eefc;
+    background:#f6f0e0;
     border:1px solid var(--card-edge);
     border-radius:4px;
     overflow:hidden;
@@ -269,7 +315,7 @@
     justify-content:center;
     font-family:'Cormorant Garamond',serif;
     font-size:24px;
-    color:var(--lilac);
+    color:var(--sapphire);
   }
   .cover-fallback{position:relative; z-index:0;}
   .cover-img{
@@ -301,9 +347,9 @@
     margin-bottom: 4px;
   }
   .book-links a{
-    color:var(--pink);
+    color:var(--ruby);
     text-decoration:none;
-    border-bottom:1px dotted var(--pink);
+    border-bottom:1px dotted var(--ruby);
   }
   .date-badge-row {
     font-family:'IBM Plex Mono',monospace;
@@ -325,7 +371,7 @@
     transition:transform .1s ease;
   }
   .star.on{
-    background:linear-gradient(100deg, var(--lilac), var(--pink));
+    background:linear-gradient(100deg, var(--amber), var(--ruby));
     -webkit-background-clip:text;
     background-clip:text;
     color:transparent;
@@ -335,8 +381,8 @@
     font-family:'Quicksand',sans-serif;
     font-size:12.5px;
     color:var(--dim);
-    background:#f9f5fd;
-    border-left:2px solid var(--card-edge);
+    background:#f9f4e6;
+    border-left:3px solid var(--emerald);
     padding:6px 9px;
     border-radius:0 6px 6px 0;
     margin:9px 0 0;
@@ -352,7 +398,7 @@
     padding:6px;
     border:1px solid var(--card-edge);
     border-radius:6px;
-    background:#fff;
+    background:#fffef9;
   }
 
   .formats{display:flex; gap:5px; margin-top:9px; flex-wrap:wrap;}
@@ -363,16 +409,15 @@
     padding:3px 7px;
     border:1px solid var(--card-edge);
     border-radius:10px;
-    background:#f9f5fd;
+    background:#f9f4e6;
     color:var(--dim);
     cursor:pointer;
     user-select:none;
   }
-  .fmt-tab.on{
-    background:linear-gradient(100deg, var(--lilac), var(--pink));
-    color:#fff;
-    border-color:transparent;
-  }
+  .fmt-tab[data-fmt="physical"].on{ background:var(--sapphire); color:#fff; border-color:transparent; }
+  .fmt-tab[data-fmt="ebook"].on{ background:var(--emerald); color:#fff; border-color:transparent; }
+  .fmt-tab[data-fmt="audio"].on{ background:var(--amber); color:#3a2c00; border-color:transparent; }
+
   .row-bottom{display:flex; justify-content:space-between; align-items:center; margin-top:10px; gap:4px; flex-wrap:wrap;}
   .status-actions{display:flex; gap:4px;}
 
@@ -387,14 +432,14 @@
     background:transparent;
     border-radius:12px;
   }
-  .read-toggle.active-tbr { border-color: var(--lilac); color: var(--lilac); }
-  .read-toggle.active-reading { border-color: var(--gold); color: #b0821a; background: rgba(227,189,111,0.08); }
-  .read-toggle.active-read { background:linear-gradient(100deg, var(--pink), var(--mint)); color:#fff; border-color:transparent; }
+  .read-toggle.active-tbr { border-color: var(--sapphire); color: var(--sapphire); }
+  .read-toggle.active-reading { border-color: var(--amber); color: #8a6a1a; background: rgba(217,164,65,0.1); }
+  .read-toggle.active-read { background:linear-gradient(100deg, var(--emerald), var(--sapphire)); color:#fff; border-color:transparent; }
 
   .del, .move-btn{
     font-family:'IBM Plex Mono',monospace;
     font-size:10px;
-    color:#c2b4d9;
+    color:#a99a7f;
     background:none;
     text-decoration:underline;
   }
@@ -403,8 +448,25 @@
     font-weight: bold;
     font-size: 12px;
     padding: 0 2px;
-    color: var(--lilac);
+    color: var(--sapphire);
   }
+
+  .stamp-mark{
+    position:absolute;
+    top:-4px; right:10px;
+    width:34px; height:34px;
+    background:conic-gradient(from 200deg, var(--sapphire), var(--emerald), var(--amber), var(--ruby), var(--amethyst), var(--sapphire));
+    border-radius:50% 50% 50% 4px;
+    box-shadow:0 3px 10px rgba(58,44,74,0.4), inset 0 0 0 2px rgba(255,255,255,0.65);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff;
+    font-size:15px;
+    transform:rotate(20deg) scale(0.3);
+    opacity:0;
+    transition:opacity .3s ease, transform .35s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
+  }
+  .book.read .stamp-mark{opacity:1; transform:rotate(20deg) scale(1);}
 
   .empty{
     text-align:center;
@@ -413,8 +475,8 @@
     font-style:italic;
     font-size:15px;
     padding:22px 10px;
-    opacity:.85;
-    border: 1px dashed var(--card-edge);
+    opacity:.9;
+    border: 1.5px dashed var(--card-edge);
     border-radius:8px;
     margin-bottom: 12px;
   }
@@ -426,7 +488,7 @@
     padding:7px 8px;
     border:1px solid var(--card-edge);
     border-radius:6px;
-    background:#fbf7ff;
+    background:#fffef9;
     color:var(--ink);
     margin-bottom:6px;
   }
@@ -445,7 +507,7 @@
     padding:6px 10px;
     border-radius:10px;
   }
-  .save-btn{background:linear-gradient(100deg, var(--lilac), var(--pink)); color:#fff;}
+  .save-btn{background:linear-gradient(100deg, var(--sapphire), var(--emerald)); color:#fff;}
   .cancel-btn{background:transparent; color:var(--dim); border:1px solid var(--card-edge) !important;}
   .edit-link{
     font-family:'IBM Plex Mono',monospace;
@@ -457,7 +519,7 @@
 
   .modal-overlay{
     position:fixed; inset:0;
-    background:rgba(150,120,190,0.35);
+    background:rgba(58,44,74,0.4);
     backdrop-filter:blur(2px);
     display:flex; align-items:center; justify-content:center;
     padding:20px;
@@ -469,11 +531,15 @@
     padding:20px;
     max-width:340px;
     width:100%;
-    border-top:3px solid transparent;
-    background-image:linear-gradient(var(--card), var(--card)), linear-gradient(100deg, var(--lilac), var(--pink), var(--mint));
+    border:1.5px solid var(--leading);
+    border-top:4px solid transparent;
+    background-image:linear-gradient(var(--card), var(--card)),
+      repeating-linear-gradient(90deg,
+        var(--sapphire) 0 20%, var(--emerald) 20% 40%,
+        var(--amber) 40% 60%, var(--ruby) 60% 80%, var(--amethyst) 80% 100%);
     background-origin:border-box;
     background-clip:padding-box, border-box;
-    box-shadow:0 24px 48px rgba(120,90,160,0.28);
+    box-shadow:0 24px 48px rgba(58,44,74,0.3);
   }
   .modal-box p{
     font-family:'Cormorant Garamond',serif;
@@ -491,23 +557,8 @@
     letter-spacing:.08em;
     text-transform:uppercase;
   }
-  .modal-btn.confirm{background:linear-gradient(100deg, var(--lilac), var(--pink)); color:#fff;}
+  .modal-btn.confirm{background:linear-gradient(100deg, var(--sapphire), var(--emerald)); color:#fff;}
   .modal-btn.cancel{background:transparent; border:1px solid var(--card-edge) !important; color:var(--dim);}
-
-  .backup-textarea{
-    width:100%;
-    min-height:140px;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    line-height:1.5;
-    padding:10px;
-    border:1px solid var(--card-edge);
-    border-radius:8px;
-    background:#fbf7ff;
-    color:var(--ink);
-    resize:vertical;
-    margin-bottom:14px;
-  }
 
   .util-row{
     display:flex;
@@ -519,19 +570,19 @@
   .util-btn{
     flex:1;
     background:transparent;
-    border:1px solid var(--lilac);
-    color:var(--lilac);
+    border:1px solid var(--sapphire);
+    color:var(--sapphire);
     font-size:10.5px;
     letter-spacing:.08em;
     text-transform:uppercase;
     padding:9px;
     border-radius:8px;
   }
-  .util-btn:active{background:rgba(180,142,230,0.12);}
+  .util-btn:active{background:rgba(63,116,171,0.12);}
   .hint{
     font-family:'IBM Plex Mono',monospace;
     font-size:9.5px;
-    color:#b7a8ce;
+    color:#b3a58c;
     text-align:center;
     margin-top:10px;
     line-height:1.5;
@@ -552,10 +603,10 @@
   .drive-dot{
     width:8px; height:8px; border-radius:50%;
     flex:none;
-    background:#c9bfd9;
+    background:#cdbfa0;
   }
-  .drive-dot.on{background:linear-gradient(100deg, var(--lilac), var(--mint));}
-  .drive-dot.error{background:var(--pink);}
+  .drive-dot.on{background:linear-gradient(100deg, var(--emerald), var(--sapphire));}
+  .drive-dot.error{background:var(--ruby);}
   .drive-status-text{
     font-family:'IBM Plex Mono',monospace;
     font-size:10px;
@@ -567,7 +618,7 @@
     font-size:10px;
     letter-spacing:.06em;
     text-transform:uppercase;
-    color:var(--lilac);
+    color:var(--sapphire);
     background:none;
     text-decoration:underline;
   }
@@ -576,7 +627,7 @@
     font-size:10px;
     letter-spacing:.1em;
     text-transform:uppercase;
-    color:var(--lilac);
+    color:var(--sapphire);
     display:block;
     margin-bottom:6px;
   }
@@ -587,7 +638,7 @@
     line-height:1.6;
     margin:10px 0 14px;
   }
-  .settings-hint a{color:var(--lilac);}
+  .settings-hint a{color:var(--sapphire);}
 
 </style>
 </head>
@@ -624,7 +675,7 @@
       </div>
     </div>
 
-    <button class="btn-add" id="addBtn">＋ Add to Stack</button>
+    <button class="btn-add" id="addBtn"><span class="spinner"></span><span id="addBtnLabel">＋ Add to Stack</span></button>
   </div>
 
   <div class="fresh-cta" id="freshStartCta" style="display:none;">
@@ -635,17 +686,35 @@
     </div>
   </div>
 
-  <div class="shelf-label">Reading Now</div>
-  <div id="readingList" class="shelf-dropzone" data-shelf="reading"></div>
-  <div class="empty" id="readingEmpty">Currently tracking no active adventures.</div>
+  <div class="shelf-section" id="shelfSection-reading" data-shelf-section="reading">
+    <div class="shelf-label" data-toggle-collapse="reading">
+      <span class="chevron">▾</span> Reading Now <span class="shelf-count" id="count-reading">0</span>
+    </div>
+    <div class="shelf-body">
+      <div id="readingList" class="shelf-dropzone" data-shelf="reading"></div>
+      <div class="empty" id="readingEmpty">Currently tracking no active adventures.</div>
+    </div>
+  </div>
 
-  <div class="shelf-label">To Be Read</div>
-  <div id="tbrList" class="shelf-dropzone" data-shelf="tbr"></div>
-  <div class="empty" id="tbrEmpty">The shelf is empty — summon your first title above.</div>
+  <div class="shelf-section" id="shelfSection-tbr" data-shelf-section="tbr">
+    <div class="shelf-label" data-toggle-collapse="tbr">
+      <span class="chevron">▾</span> To Be Read <span class="shelf-count" id="count-tbr">0</span>
+    </div>
+    <div class="shelf-body">
+      <div id="tbrList" class="shelf-dropzone" data-shelf="tbr"></div>
+      <div class="empty" id="tbrEmpty">The shelf is empty — summon your first title above.</div>
+    </div>
+  </div>
 
-  <div class="shelf-label">Already Read</div>
-  <div id="readList" class="shelf-dropzone" data-shelf="read"></div>
-  <div class="empty" id="readEmpty">Devoured tales will rest here.</div>
+  <div class="shelf-section" id="shelfSection-read" data-shelf-section="read">
+    <div class="shelf-label" data-toggle-collapse="read">
+      <span class="chevron">▾</span> Already Read <span class="shelf-count" id="count-read">0</span>
+    </div>
+    <div class="shelf-body">
+      <div id="readList" class="shelf-dropzone" data-shelf="read"></div>
+      <div class="empty" id="readEmpty">Devoured tales will rest here.</div>
+    </div>
+  </div>
 
   <div class="util-row">
     <button class="util-btn" id="saveFilesBtn">📁 Save to Files</button>
@@ -668,73 +737,74 @@
 
 <script>
 const STORAGE_KEY = 'bookshelf-books-v2';
+const SHELVES = ['reading', 'tbr', 'read'];
 let currentInputMethod = 'manual';
 
 function normalizeBook(b){
-  if(b.read === true && !b.status) b.status = 'read';
-  if(b.read === false && !b.status) b.status = 'tbr';
-  if(!b.status) b.status = 'tbr';
-  if(!b.formats) b.formats = [];
-  b.read = (b.status === 'read');
-  return b;
+  const clean = {...b};
+  delete clean.status; // shelf membership now IS the status — no redundant field
+  delete clean.read;
+  if(!clean.formats) clean.formats = [];
+  if(!clean.id) clean.id = uid();
+  return clean;
 }
 
-// Storage/backup shape is { reading: [...], tbr: [...], read: [...] }.
-// Internally we still work with one flat `books` array (status field on
-// each book) since that's simplest for filtering/finding — grouping only
-// happens at the save/export boundary and ungrouping at load/import.
-function groupByStatus(bookArray){
-  const grouped = { reading: [], tbr: [], read: [] };
-  bookArray.forEach(b => {
-    const status = (b.status === 'reading' || b.status === 'read') ? b.status : 'tbr';
-    grouped[status].push(b);
-  });
-  return grouped;
-}
-
-function flattenGrouped(grouped){
-  const reading = Array.isArray(grouped.reading) ? grouped.reading.map(b => ({...b, status:'reading'})) : [];
-  const tbr     = Array.isArray(grouped.tbr)     ? grouped.tbr.map(b => ({...b, status:'tbr'}))         : [];
-  const read    = Array.isArray(grouped.read)    ? grouped.read.map(b => ({...b, status:'read'}))       : [];
-  return [...reading, ...tbr, ...read];
-}
-
-// Accepts the {reading, tbr, read} grouped shape and returns a flat,
-// normalized array of books for internal use.
-function normalizeBackupData(parsed){
-  if(!parsed || typeof parsed !== 'object' ||
-     !(Array.isArray(parsed.reading) || Array.isArray(parsed.tbr) || Array.isArray(parsed.read))){
+// Storage/backup shape is exactly our in-memory shape:
+// { reading: [...], tbr: [...], read: [...] } — no conversion needed
+// at the save/load boundary anymore.
+function normalizeLibrary(raw){
+  if(!raw || typeof raw !== 'object' ||
+     !(Array.isArray(raw.reading) || Array.isArray(raw.tbr) || Array.isArray(raw.read))){
     throw new Error('Unrecognized backup format');
   }
-  return flattenGrouped(parsed).map(normalizeBook);
+  return {
+    reading: (raw.reading || []).map(normalizeBook),
+    tbr: (raw.tbr || []).map(normalizeBook),
+    read: (raw.read || []).map(normalizeBook)
+  };
+}
+
+function emptyLibrary(){
+  return { reading: [], tbr: [], read: [] };
 }
 
 function load(){
   try{
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if(!raw) return [];
-    return normalizeBackupData(raw);
+    if(!raw) return emptyLibrary();
+    return normalizeLibrary(raw);
   }
-  catch(e){ return []; }
+  catch(e){ return emptyLibrary(); }
 }
 
 // Writes to localStorage only — used internally when data arrives FROM
 // Drive/Files, so we don't mark it as a new "local change" (which would
 // make it look like this device has unsynced edits ahead of Drive).
-function persistLocal(books){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(groupByStatus(books)));
+function persistLocal(lib){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(lib));
 }
 
-function save(books){
-  persistLocal(books);
+function save(){
+  persistLocal(library);
   localStorage.setItem('bookshelf-local-last-change', String(Date.now()));
   scheduleDriveSync();
 }
 
-let books = load();
+let library = load();
+let editingShelf = null;
 let editingId = null;
+let collapsedShelves = {};
+try{ collapsedShelves = JSON.parse(localStorage.getItem('bookshelf-collapsed') || '{}'); }catch(e){ collapsedShelves = {}; }
 
 function uid(){ return 'b' + Date.now() + Math.random().toString(16).slice(2,8); }
+
+function findBookById(id){
+  for(const shelf of SHELVES){
+    const b = library[shelf].find(x => x.id === id);
+    if(b) return { shelf, book: b };
+  }
+  return null;
+}
 
 function switchInputMethod(method) {
   currentInputMethod = method;
@@ -777,31 +847,31 @@ function parseGoodreadsHtml(htmlString) {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
-    
+
     let titleEl = doc.querySelector('[data-testid="bookTitle"]');
     let title = titleEl ? titleEl.textContent.trim() : '';
-    
+
     if (!title) {
       let pageTitle = doc.querySelector('title') ? doc.querySelector('title').textContent : '';
       if (pageTitle) {
         title = pageTitle.replace(/by .*| Goodreads/gi, '').trim();
       }
     }
-    
+
     let authorEl = doc.querySelector('[data-testid="name"]') || doc.querySelector('.ContributorLink__name');
     let author = authorEl ? authorEl.textContent.trim() : '';
-    
+
     if(!title) {
       let ogTitle = doc.querySelector('meta[property="og:title"]');
       if(ogTitle) title = ogTitle.getAttribute('content');
     }
-    
+
     let coverEl = doc.querySelector('.BookPage__bookCover img') || doc.querySelector('[data-testid="bookCover"] img') || doc.querySelector('meta[property="og:image"]');
     let cover = null;
     if (coverEl) {
       cover = coverEl.tagName === 'META' ? coverEl.getAttribute('content') : coverEl.src;
     }
-    
+
     return {
       title: title || 'Pasted Goodreads Book',
       author: author || '',
@@ -838,76 +908,78 @@ async function fetchCover(title, author){
   }catch(e){ return null; }
 }
 
+const SHELF_LABELS = { reading: 'Reading Now', tbr: 'To Be Read', read: 'Already Read' };
+
 function render(){
-  const tbr = books.filter(b => b.status === 'tbr');
-  const reading = books.filter(b => b.status === 'reading');
-  const read = books.filter(b => b.status === 'read');
-  const isFreshStart = books.length === 0;
-
+  const totalBooks = library.reading.length + library.tbr.length + library.read.length;
+  const isFreshStart = totalBooks === 0;
   document.getElementById('freshStartCta').style.display = isFreshStart ? 'block' : 'none';
-  document.getElementById('tbrEmpty').style.display = (!isFreshStart && !tbr.length) ? 'block' : 'none';
-  document.getElementById('readingEmpty').style.display = (!isFreshStart && !reading.length) ? 'block' : 'none';
-  document.getElementById('readEmpty').style.display = (!isFreshStart && !read.length) ? 'block' : 'none';
 
-  document.getElementById('tbrList').innerHTML = tbr.map(cardHtml).join('');
-  document.getElementById('readingList').innerHTML = reading.map(cardHtml).join('');
-  document.getElementById('readList').innerHTML = read.map(cardHtml).join('');
+  SHELVES.forEach(shelf => renderShelf(shelf, isFreshStart));
 
   setupInteractions();
   setupDragAndDrop();
 }
 
+function renderShelf(shelf, isFreshStart){
+  const list = library[shelf];
+  document.getElementById(shelf + 'List').innerHTML = list.map(b => cardHtml(b, shelf)).join('');
+  document.getElementById(shelf + 'Empty').style.display = (!isFreshStart && !list.length) ? 'block' : 'none';
+  document.getElementById('count-' + shelf).textContent = list.length;
+
+  const section = document.getElementById('shelfSection-' + shelf);
+  section.classList.toggle('collapsed', !!collapsedShelves[shelf]);
+}
+
+function toggleShelfCollapse(shelf){
+  collapsedShelves[shelf] = !collapsedShelves[shelf];
+  localStorage.setItem('bookshelf-collapsed', JSON.stringify(collapsedShelves));
+  document.getElementById('shelfSection-' + shelf).classList.toggle('collapsed', !!collapsedShelves[shelf]);
+}
+
 function setupInteractions() {
+  document.querySelectorAll('[data-toggle-collapse]').forEach(el=>{
+    el.onclick = () => toggleShelfCollapse(el.getAttribute('data-toggle-collapse'));
+  });
   document.querySelectorAll('[data-change-status]').forEach(el=>{
-    el.onclick = () => setBookStatus(el.getAttribute('data-change-status'), el.getAttribute('data-status'));
+    el.onclick = () => setBookStatus(el.getAttribute('data-shelf-of'), el.getAttribute('data-change-status'), el.getAttribute('data-status'));
   });
   document.querySelectorAll('[data-toggle-fmt]').forEach(el=>{
-    el.onclick = () => toggleFormat(el.getAttribute('data-toggle-fmt'), el.getAttribute('data-fmt'));
+    el.onclick = () => toggleFormat(el.getAttribute('data-shelf-of'), el.getAttribute('data-toggle-fmt'), el.getAttribute('data-fmt'));
   });
   document.querySelectorAll('[data-rate]').forEach(el=>{
-    el.onclick = () => setRating(el.getAttribute('data-rate'), Number(el.getAttribute('data-star')));
+    el.onclick = () => setRating(el.getAttribute('data-shelf-of'), el.getAttribute('data-rate'), Number(el.getAttribute('data-star')));
   });
   document.querySelectorAll('[data-del]').forEach(el=>{
-    el.onclick = () => deleteBook(el.getAttribute('data-del'));
+    el.onclick = () => deleteBook(el.getAttribute('data-shelf-of'), el.getAttribute('data-del'));
   });
   document.querySelectorAll('[data-edit]').forEach(el=>{
-    el.onclick = () => { editingId = el.getAttribute('data-edit'); render(); };
+    el.onclick = () => { editingShelf = el.getAttribute('data-shelf-of'); editingId = el.getAttribute('data-edit'); render(); };
   });
   document.querySelectorAll('[data-save]').forEach(el=>{
-    el.onclick = () => saveEdit(el.getAttribute('data-save'));
+    el.onclick = () => saveEdit(el.getAttribute('data-shelf-of'), el.getAttribute('data-save'));
   });
   document.querySelectorAll('[data-cancel-edit]').forEach(el=>{
-    el.onclick = () => { editingId = null; render(); };
+    el.onclick = () => { editingShelf = null; editingId = null; render(); };
   });
   document.querySelectorAll('[data-move]').forEach(el=>{
-    el.onclick = () => moveBookOrder(el.getAttribute('data-move'), el.getAttribute('data-dir'));
+    el.onclick = () => moveBookOrder(el.getAttribute('data-shelf-of'), el.getAttribute('data-move'), el.getAttribute('data-dir'));
   });
 }
 
-/* Accessible Mobile Reordering Logic (Option 1) */
-function moveBookOrder(id, direction) {
-  const currentBook = books.find(b => b.id === id);
-  if (!currentBook) return;
+/* Accessible Mobile Reordering Logic */
+function moveBookOrder(shelf, id, direction) {
+  const arr = library[shelf];
+  const idx = arr.findIndex(b => b.id === id);
+  if (idx === -1) return;
 
-  // Filter out the active sub-shelf list to know relative local positions
-  const sameShelfBooks = books.filter(b => b.status === currentBook.status);
-  const targetIndex = sameShelfBooks.findIndex(b => b.id === id);
-
-  if (direction === 'up' && targetIndex > 0) {
-    const swapWith = sameShelfBooks[targetIndex - 1];
-    const idxA = books.indexOf(currentBook);
-    const idxB = books.indexOf(swapWith);
-    books[idxA] = swapWith;
-    books[idxB] = currentBook;
-  } else if (direction === 'down' && targetIndex < sameShelfBooks.length - 1) {
-    const swapWith = sameShelfBooks[targetIndex + 1];
-    const idxA = books.indexOf(currentBook);
-    const idxB = books.indexOf(swapWith);
-    books[idxA] = swapWith;
-    books[idxB] = currentBook;
+  if (direction === 'up' && idx > 0) {
+    [arr[idx-1], arr[idx]] = [arr[idx], arr[idx-1]];
+  } else if (direction === 'down' && idx < arr.length - 1) {
+    [arr[idx], arr[idx+1]] = [arr[idx+1], arr[idx]];
   }
 
-  save(books);
+  save();
   render();
 }
 
@@ -954,40 +1026,37 @@ function getDragAfterElement(container, y) {
 }
 
 function saveReorderedLists() {
-  const updatedBooks = [];
-  const shelves = ['reading', 'tbr', 'read'];
+  const newLibrary = emptyLibrary();
 
-  shelves.forEach(shelfName => {
+  SHELVES.forEach(shelfName => {
     const zone = document.querySelector(`.shelf-dropzone[data-shelf="${shelfName}"]`);
     const shelfItems = zone.querySelectorAll('.book');
     shelfItems.forEach(el => {
       const id = el.getAttribute('data-id');
-      const foundBook = books.find(b => b.id === id);
-      if (foundBook) {
-        if (foundBook.status !== shelfName) {
-          foundBook.status = shelfName;
-          foundBook.read = (shelfName === 'read');
-          if (shelfName === 'reading' && !foundBook.dateStarted) foundBook.dateStarted = new Date().toISOString().slice(0, 10);
-          if (shelfName === 'read' && !foundBook.dateCompleted) foundBook.dateCompleted = new Date().toISOString().slice(0, 10);
+      const priorShelf = el.getAttribute('data-shelf-of');
+      const found = findBookById(id);
+      if (!found) return;
+      const b = found.book;
+      if (priorShelf !== shelfName) {
+        if (shelfName === 'reading' && !b.dateStarted) b.dateStarted = new Date().toISOString();
+        if (shelfName === 'read' && !b.dateCompleted) {
+          b.dateCompleted = new Date().toISOString();
+          if(!b.dateStarted) b.dateStarted = new Date().toISOString();
         }
-        updatedBooks.push(foundBook);
       }
+      newLibrary[shelfName].push(b);
     });
   });
 
-  books.forEach(b => {
-    if(!updatedBooks.some(ub => ub.id === b.id)) updatedBooks.push(b);
-  });
-
-  books = updatedBooks;
-  save(books);
+  library = newLibrary;
+  save();
   render();
 }
 
-function starsHtml(b){
+function starsHtml(b, shelf){
   let out = '<div class="stars">';
   for(let i=1; i<=5; i++){
-    out += `<span class="star ${i<=(b.rating||0) ? 'on' : ''}" data-rate="${b.id}" data-star="${i}">★</span>`;
+    out += `<span class="star ${i<=(b.rating||0) ? 'on' : ''}" data-rate="${b.id}" data-shelf-of="${shelf}" data-star="${i}">★</span>`;
   }
   out += '</div>';
   return out;
@@ -998,7 +1067,7 @@ function formatDate(isoStr) {
   return isoStr.slice(0, 10);
 }
 
-function cardHtml(b){
+function cardHtml(b, shelf){
   const initials = (b.title||'?').slice(0,1).toUpperCase();
   const coverMarkup = `
     <span class="cover-fallback">${initials}</span>
@@ -1010,17 +1079,17 @@ function cardHtml(b){
     ['audio','Audio']
   ];
 
-  if(b.id === editingId){
+  if(shelf === editingShelf && b.id === editingId){
     return `
-    <div class="book" draggable="true" data-id="${b.id}">
+    <div class="book" draggable="true" data-id="${b.id}" data-shelf-of="${shelf}">
       <div class="cover">${coverMarkup}</div>
       <div class="book-info">
         <label class="edit-label-sm">Title</label>
         <input class="edit-field" id="editTitle-${b.id}" type="text" value="${escapeHtml(b.title)}" placeholder="Title">
-        
+
         <label class="edit-label-sm">Author</label>
         <input class="edit-field" id="editAuthor-${b.id}" type="text" value="${escapeHtml(b.author||'')}" placeholder="Author">
-        
+
         <label class="edit-label-sm">Goodreads Link</label>
         <input class="edit-field" id="editGoodreads-${b.id}" type="text" value="${escapeHtml(b.goodreads||'')}" placeholder="Goodreads URL">
 
@@ -1034,66 +1103,67 @@ function cardHtml(b){
         <textarea class="edit-notes" id="editNotes-${b.id}" placeholder="Thoughts, quotes, or reasons to read...">${escapeHtml(b.notes||'')}</textarea>
 
         <div class="edit-actions">
-          <button class="save-btn" data-save="${b.id}">Save Changes</button>
-          <button class="cancel-btn" data-cancel-edit="${b.id}">Cancel</button>
+          <button class="save-btn" data-save="${b.id}" data-shelf-of="${shelf}">Save Changes</button>
+          <button class="cancel-btn" data-cancel-edit="${b.id}" data-shelf-of="${shelf}">Cancel</button>
         </div>
       </div>
     </div>`;
   }
 
-  const notesMarkup = (b.notes && b.notes.trim()) 
-    ? `<div class="book-notes">${escapeHtml(b.notes)}</div>` 
+  const notesMarkup = (b.notes && b.notes.trim())
+    ? `<div class="book-notes">${escapeHtml(b.notes)}</div>`
     : '';
 
   let datesMarkup = '';
-  if (b.status === 'reading' && b.dateStarted) {
+  if (shelf === 'reading' && b.dateStarted) {
     datesMarkup = `<div class="date-badge-row">⏳ Started: ${formatDate(b.dateStarted)}</div>`;
-  } else if (b.status === 'read') {
+  } else if (shelf === 'read') {
     const startStr = b.dateStarted ? `Started: ${formatDate(b.dateStarted)} · ` : '';
     const endStr = b.dateCompleted ? `Finished: ${formatDate(b.dateCompleted)}` : 'Finished';
     datesMarkup = `<div class="date-badge-row">✨ ${startStr}${endStr}</div>`;
   }
 
   return `
-  <div class="book ${b.status==='read'?'read':''} ${b.status==='reading'?'reading':''}" draggable="true" data-id="${b.id}">
+  <div class="book ${shelf==='read'?'read':''} ${shelf==='reading'?'reading':''}" draggable="true" data-id="${b.id}" data-shelf-of="${shelf}">
+    <div class="stamp-mark">☾</div>
     <div class="cover">${coverMarkup}</div>
     <div class="book-info">
       <p class="book-title">${escapeHtml(b.title)}</p>
       <p class="book-author">${escapeHtml(b.author||'')}</p>
       <div class="book-links"><a href="${escapeHtml(b.goodreads || '#')}" target="_blank" rel="noopener">Goodreads ↗</a></div>
-      
+
       ${datesMarkup}
-      ${starsHtml(b)}
-      
+      ${starsHtml(b, shelf)}
+
       <div class="formats">
-        ${fmts.map(([key,label])=>`<span class="fmt-tab ${b.formats && b.formats.includes(key)?'on':''}" data-toggle-fmt="${b.id}" data-fmt="${key}">${label}</span>`).join('')}
+        ${fmts.map(([key,label])=>`<span class="fmt-tab ${b.formats && b.formats.includes(key)?'on':''}" data-toggle-fmt="${b.id}" data-shelf-of="${shelf}" data-fmt="${key}">${label}</span>`).join('')}
       </div>
-      
+
       ${notesMarkup}
-      
+
       <div class="row-bottom">
         <div class="status-actions">
-          <button class="read-toggle ${b.status==='tbr'?'active-tbr':''}" data-change-status="${b.id}" data-status="tbr">TBR</button>
-          <button class="read-toggle ${b.status==='reading'?'active-reading':''}" data-change-status="${b.id}" data-status="reading">Reading</button>
-          <button class="read-toggle ${b.status==='read'?'active-read':''}" data-change-status="${b.id}" data-status="read">✓ Read</button>
+          <button class="read-toggle ${shelf==='tbr'?'active-tbr':''}" data-change-status="${b.id}" data-shelf-of="${shelf}" data-status="tbr">TBR</button>
+          <button class="read-toggle ${shelf==='reading'?'active-reading':''}" data-change-status="${b.id}" data-shelf-of="${shelf}" data-status="reading">Reading</button>
+          <button class="read-toggle ${shelf==='read'?'active-read':''}" data-change-status="${b.id}" data-shelf-of="${shelf}" data-status="read">✓ Read</button>
         </div>
         <span>
-          <button class="move-btn" data-move="${b.id}" data-dir="up">↑</button>
-          <button class="move-btn" data-move="${b.id}" data-dir="down">↓</button>
+          <button class="move-btn" data-move="${b.id}" data-shelf-of="${shelf}" data-dir="up">↑</button>
+          <button class="move-btn" data-move="${b.id}" data-shelf-of="${shelf}" data-dir="down">↓</button>
           &nbsp;·&nbsp;
-          <button class="edit-link" data-edit="${b.id}">edit</button>
+          <button class="edit-link" data-edit="${b.id}" data-shelf-of="${shelf}">edit</button>
           &nbsp;·&nbsp;
-          <button class="del" data-del="${b.id}">remove</button>
+          <button class="del" data-del="${b.id}" data-shelf-of="${shelf}">remove</button>
         </span>
       </div>
     </div>
   </div>`;
 }
 
-async function saveEdit(id){
-  const b = books.find(x=>x.id===id);
+async function saveEdit(shelf, id){
+  const b = library[shelf] && library[shelf].find(x=>x.id===id);
   if(!b) return;
-  
+
   const newTitle = document.getElementById(`editTitle-${id}`).value.trim();
   const newAuthor = document.getElementById(`editAuthor-${id}`).value.trim();
   const newGoodreads = document.getElementById(`editGoodreads-${id}`).value.trim();
@@ -1103,23 +1173,24 @@ async function saveEdit(id){
 
   if(!newTitle) return;
   const titleChanged = newTitle !== b.title || newAuthor !== (b.author||'');
-  
+
   b.title = newTitle;
   b.author = newAuthor;
   b.goodreads = newGoodreads || goodreadsUrl(b.title, b.author);
   b.notes = newNotes;
   b.dateStarted = newStart ? new Date(newStart).toISOString() : null;
   b.dateCompleted = newComplete ? new Date(newComplete).toISOString() : null;
-  
+
+  editingShelf = null;
   editingId = null;
-  save(books);
+  save();
   render();
 
   if(titleChanged && !newGoodreads){
     const info = await fetchCover(b.title, b.author);
     if(info){
       b.cover = info.cover;
-      save(books);
+      save();
       render();
     }
   }
@@ -1129,49 +1200,57 @@ function escapeHtml(s){
   return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-function setBookStatus(id, targetStatus){
-  const b = books.find(x=>x.id===id);
-  if(!b) return;
-  
-  b.status = targetStatus;
-  b.read = (targetStatus === 'read');
-  
-  if(targetStatus === 'reading' && !b.dateStarted) {
+function setBookStatus(fromShelf, id, targetShelf){
+  if(fromShelf === targetShelf) return;
+  const idx = library[fromShelf].findIndex(x => x.id === id);
+  if(idx === -1) return;
+  const [b] = library[fromShelf].splice(idx, 1);
+
+  if(targetShelf === 'reading' && !b.dateStarted) {
     b.dateStarted = new Date().toISOString();
   }
-  if(targetStatus === 'read' && !b.dateCompleted) {
+  if(targetShelf === 'read' && !b.dateCompleted) {
     b.dateCompleted = new Date().toISOString();
     if(!b.dateStarted) b.dateStarted = new Date().toISOString();
   }
-  
-  save(books);
+
+  library[targetShelf].unshift(b);
+  save();
   render();
 }
 
-function toggleFormat(id, fmt){
-  const b = books.find(x=>x.id===id);
+function toggleFormat(shelf, id, fmt){
+  const b = library[shelf] && library[shelf].find(x=>x.id===id);
   if(!b) return;
   if(!b.formats) b.formats = [];
   const i = b.formats.indexOf(fmt);
   if(i>-1) b.formats.splice(i,1); else b.formats.push(fmt);
-  save(books);
+  save();
   render();
 }
 
-function setRating(id, star){
-  const b = books.find(x=>x.id===id);
+function setRating(shelf, id, star){
+  const b = library[shelf] && library[shelf].find(x=>x.id===id);
   if(!b) return;
   b.rating = (b.rating === star) ? 0 : star;
-  save(books);
+  save();
   render();
 }
 
-async function deleteBook(id){
+async function deleteBook(shelf, id){
   const ok = await askConfirm('Remove this book from your bookshelf?');
   if(!ok) return;
-  books = books.filter(x=>x.id!==id);
-  save(books);
+  library[shelf] = library[shelf].filter(x=>x.id!==id);
+  save();
   render();
+}
+
+function setAddButtonLoading(isLoading){
+  const btn = document.getElementById('addBtn');
+  const label = document.getElementById('addBtnLabel');
+  btn.classList.toggle('loading', isLoading);
+  btn.disabled = isLoading;
+  label.textContent = isLoading ? 'Adding…' : '＋ Add to Stack';
 }
 
 document.getElementById('addBtn').onclick = async () => {
@@ -1192,7 +1271,7 @@ document.getElementById('addBtn').onclick = async () => {
     const dumpArea = document.getElementById('htmlDumpInput');
     const rawHtml = dumpArea.value.trim();
     if(!rawHtml) { dumpArea.focus(); return; }
-    
+
     const parsed = parseGoodreadsHtml(rawHtml);
     if(parsed) {
       title = parsed.title;
@@ -1205,6 +1284,8 @@ document.getElementById('addBtn').onclick = async () => {
     dumpArea.value = '';
   }
 
+  setAddButtonLoading(true);
+
   const book = {
     id: uid(),
     title, author,
@@ -1213,26 +1294,28 @@ document.getElementById('addBtn').onclick = async () => {
     formats: [],
     rating: 0,
     notes: '',
-    status: 'tbr',
-    read: false,
     dateAdded: new Date().toISOString(),
     dateStarted: null,
     dateCompleted: null
   };
 
-  books.push(book);
-  save(books);
+  library.tbr.unshift(book);
+  save();
   render();
 
-  if(title && !book.cover){
-    const info = await fetchCover(title, author);
-    if(info){
-      book.cover = info.cover;
-      if(!author && info.author) book.author = info.author;
-      if (currentInputMethod === 'manual') book.goodreads = goodreadsUrl(book.title, book.author);
-      save(books);
-      render();
+  try{
+    if(title && !book.cover){
+      const info = await fetchCover(title, author);
+      if(info){
+        book.cover = info.cover;
+        if(!author && info.author) book.author = info.author;
+        if (currentInputMethod === 'manual') book.goodreads = goodreadsUrl(book.title, book.author);
+        save();
+        render();
+      }
     }
+  } finally {
+    setAddButtonLoading(false);
   }
 };
 
@@ -1244,7 +1327,7 @@ document.getElementById('authorInput').addEventListener('keydown', e=>{
 });
 
 document.getElementById('saveFilesBtn').onclick = async () => {
-  const content = JSON.stringify(groupByStatus(books), null, 2);
+  const content = JSON.stringify(library, null, 2);
   const stamp = new Date().toISOString().slice(0,10);
   const filename = `bookshelf-backup-${stamp}.json`;
 
@@ -1275,26 +1358,37 @@ document.getElementById('importFileInput').onchange = (e) => {
   reader.onload = async () => {
     let incoming;
     try{
-      incoming = normalizeBackupData(JSON.parse(reader.result));
+      incoming = normalizeLibrary(JSON.parse(reader.result));
     }catch(err){
       askInfo('That file didn\'t look like a valid backup — make sure you picked the right bookshelf-backup file.');
       e.target.value = '';
       return;
     }
     const replace = await askConfirm('Replace your current list with this backup? Choose Cancel to merge instead.');
-    if(replace){
-      books = incoming;
-    } else {
-      const existingIds = new Set(books.map(b=>b.id));
-      incoming.forEach(b => { if(!existingIds.has(b.id)) books.push(b); });
-    }
-    save(books);
+    applyIncomingLibrary(incoming, replace ? 'replace' : 'merge');
+    save();
     render();
     askInfo('Backup loaded.');
     e.target.value = '';
   };
   reader.readAsText(file);
 };
+
+function applyIncomingLibrary(incoming, mode){
+  if(mode === 'replace'){
+    library = incoming;
+    return;
+  }
+  const allExistingIds = new Set([...library.reading, ...library.tbr, ...library.read].map(b=>b.id));
+  SHELVES.forEach(shelf => {
+    incoming[shelf].forEach(b => {
+      if(!allExistingIds.has(b.id)){
+        library[shelf].push(b);
+        allExistingIds.add(b.id);
+      }
+    });
+  });
+}
 
 /* ---------- Google Drive auto-sync ---------- */
 
@@ -1397,12 +1491,12 @@ function requestDriveToken(interactive){
 
 async function ensureDriveToken(interactive){
   if(driveToken && driveToken.expiresAt > Date.now()) return driveToken.access_token;
-  if(driveToken) persistDriveToken(null); // clear the stale/expired one
+  if(driveToken) persistDriveToken(null);
   return await requestDriveToken(interactive);
 }
 
 async function driveSaveBackup(token){
-  const content = JSON.stringify(groupByStatus(books), null, 2);
+  const content = JSON.stringify(library, null, 2);
 
   if(driveFileId){
     const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
@@ -1437,8 +1531,6 @@ async function driveSaveBackup(token){
   const now = Date.now();
   localStorage.setItem('bookshelf-drive-last-sync', new Date(now).toISOString());
   localStorage.setItem('bookshelf-drive-last-sync-ts', String(now));
-  // We just wrote this content, so as far as conflict-detection is concerned
-  // Drive is now "known" to match local as of this moment.
   localStorage.setItem('bookshelf-drive-known-modified', String(now));
 }
 
@@ -1484,16 +1576,6 @@ async function driveDownloadBackup(token, fileId){
   return await res.json();
 }
 
-function applyIncomingBooks(rawJson, mode){
-  const incoming = normalizeBackupData(rawJson);
-  if(mode === 'replace'){
-    books = incoming;
-  } else {
-    const existingIds = new Set(books.map(b=>b.id));
-    incoming.forEach(b => { if(!existingIds.has(b.id)) books.push(b); });
-  }
-}
-
 async function loadFromDrive(){
   if(!driveClientId){
     openDriveSettingsModal();
@@ -1501,7 +1583,7 @@ async function loadFromDrive(){
   }
   setDriveStatus('syncing');
   try{
-    const token = await ensureDriveToken(true); // interactive — this is a deliberate user action
+    const token = await ensureDriveToken(true);
     if(!token){ setDriveStatus('needs-reconnect'); return; }
 
     const file = await driveFindBackupFile(token);
@@ -1511,20 +1593,20 @@ async function loadFromDrive(){
       return;
     }
 
-    // Remember this file so future auto-syncs update it instead of creating a duplicate.
     driveFileId = file.id;
     localStorage.setItem('bookshelf-drive-file-id', driveFileId);
 
     const rawJson = await driveDownloadBackup(token, file.id);
+    const incoming = normalizeLibrary(rawJson);
     const replace = await askConfirm('Replace your current list with this Google Drive backup? Choose Cancel to merge instead.');
-    applyIncomingBooks(rawJson, replace ? 'replace' : 'merge');
+    applyIncomingLibrary(incoming, replace ? 'replace' : 'merge');
 
     const now = Date.now();
-    persistLocal(books);
+    persistLocal(library);
     localStorage.setItem('bookshelf-local-last-change', String(now));
     localStorage.setItem('bookshelf-drive-known-modified', String(new Date(file.modifiedTime).getTime()));
     render();
-    scheduleDriveSync(); // reconcile Drive with the merged/replaced result
+    scheduleDriveSync();
     setDriveStatus('connected');
     askInfo('Loaded from Google Drive.');
   }catch(e){
@@ -1533,17 +1615,11 @@ async function loadFromDrive(){
   }
 }
 
-// Runs on startup (when Drive is configured) to decide, without asking every
-// time, whether Drive has something newer we should pull down:
-//  - If Drive is newer AND this device has no unsynced local edits → pull silently.
-//  - If Drive is newer AND this device DOES have unsynced edits → ask first (real conflict).
-//  - If Drive isn't newer but this device has unsynced edits → push them (catch up
-//    on a sync that didn't get to finish, e.g. app closed mid-debounce).
 async function checkDriveForUpdates(){
   if(!driveClientId) return;
   try{
-    const token = await ensureDriveToken(false); // silent only — don't interrupt app launch with a login prompt
-    if(!token) return; // can't check quietly; normal manual/auto sync still available
+    const token = await ensureDriveToken(false);
+    if(!token) return;
 
     let file = null;
     if(driveFileId){
@@ -1565,7 +1641,7 @@ async function checkDriveForUpdates(){
         localStorage.setItem('bookshelf-drive-file-id', driveFileId);
       }
     }
-    if(!file) return; // nothing on Drive yet — first sync will create it
+    if(!file) return;
 
     const driveModified = new Date(file.modifiedTime).getTime();
     const knownModified = Number(localStorage.getItem('bookshelf-drive-known-modified') || 0);
@@ -1574,28 +1650,24 @@ async function checkDriveForUpdates(){
     const hasUnsyncedLocalChanges = localLastChange > lastSyncPush;
 
     if(driveModified <= knownModified){
-      // Drive has nothing we haven't already seen. If we have local edits
-      // that never made it up (e.g. app closed mid-debounce), flush them now.
       if(hasUnsyncedLocalChanges) doDriveSync(false);
       return;
     }
 
     if(!hasUnsyncedLocalChanges){
-      // Safe: nothing to lose locally, so just pull Drive's newer copy.
       const rawJson = await driveDownloadBackup(token, file.id);
-      applyIncomingBooks(rawJson, 'replace');
-      persistLocal(books);
+      library = normalizeLibrary(rawJson);
+      persistLocal(library);
       localStorage.setItem('bookshelf-drive-known-modified', String(driveModified));
       localStorage.setItem('bookshelf-drive-last-sync-ts', String(Date.now()));
       render();
       setDriveStatus('connected');
     } else {
-      // Real conflict: both sides changed. Ask rather than silently picking one.
       const wantsDrive = await askConfirm('Your Google Drive backup has newer changes than this device, and this device also has unsynced edits. Load the Drive version? (Cancel keeps this device\'s version — it will overwrite Drive on the next sync.)');
       if(wantsDrive){
         const rawJson = await driveDownloadBackup(token, file.id);
-        applyIncomingBooks(rawJson, 'replace');
-        persistLocal(books);
+        library = normalizeLibrary(rawJson);
+        persistLocal(library);
         localStorage.setItem('bookshelf-drive-known-modified', String(driveModified));
         localStorage.setItem('bookshelf-drive-last-sync-ts', String(Date.now()));
         render();
@@ -1603,8 +1675,7 @@ async function checkDriveForUpdates(){
       setDriveStatus('connected');
     }
   }catch(e){
-    // Silent failure on the startup check — don't disrupt the user with this;
-    // manual Load/Sync buttons remain available.
+    // Silent failure on the startup check.
   }
 }
 
