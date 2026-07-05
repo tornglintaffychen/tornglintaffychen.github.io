@@ -1219,8 +1219,8 @@ document.getElementById('addBtn').onclick = async () => {
     dateStarted: null,
     dateCompleted: null
   };
-  
-  books.unshift(book);
+
+  books.push(book);
   save(books);
   render();
 
