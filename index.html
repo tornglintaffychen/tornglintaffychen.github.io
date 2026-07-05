@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Stacks">
-<title>Stacks — Reading Tracker</title>
+<meta name="apple-mobile-web-app-title" content="Bookshelf">
+<meta name="color-scheme" content="light">
+<title>Bookshelf — Reading Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Quicksand:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -25,7 +26,7 @@
     --shadow: rgba(150,110,190,0.16);
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0; background-color:#fffdfc; color-scheme:light;}
   body{
     background:
       radial-gradient(60% 45% at 12% 0%, var(--bg-a) 0%, transparent 60%),
@@ -782,10 +783,12 @@ document.getElementById('importBtn').onclick = () => openBackupModal('import');
 document.getElementById('saveFilesBtn').onclick = async () => {
   const content = JSON.stringify(books, null, 2);
   const stamp = new Date().toISOString().slice(0,10);
-  const filename = `bookshelf-backup-${stamp}.json`;
+  const filename = `bookshelf-backup-${stamp}.txt`;
 
   try{
-    const file = new File([content], filename, {type:'application/json'});
+    // iOS Safari's share sheet is picky about file types — plain text
+    // shares reliably, where application/json often silently fails.
+    const file = new File([content], filename, {type:'text/plain'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({files:[file], title:'Bookshelf backup'});
       return;
@@ -794,7 +797,8 @@ document.getElementById('saveFilesBtn').onclick = async () => {
     if(e.name === 'AbortError') return; // user cancelled the share sheet — not an error
   }
 
-  askInfo('Saving to Files isn\'t available here. Make sure you opened this page in Safari (not Chrome or another browser), then try again — or use Export instead and paste the text into a note.');
+  // Fall back to the reliable copy/paste flow rather than a dead end.
+  openBackupModal('export');
 };
 
 render();
