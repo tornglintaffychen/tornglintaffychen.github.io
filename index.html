@@ -406,23 +406,6 @@
     color: var(--lilac);
   }
 
-  .stamp-mark{
-    position:absolute;
-    top:-4px; right:10px;
-    width:34px; height:34px;
-    background:conic-gradient(from 200deg, var(--lilac), var(--pink), var(--mint), var(--lilac));
-    border-radius:50% 50% 50% 4px;
-    box-shadow:0 3px 10px rgba(150,110,190,0.4), inset 0 0 0 2px rgba(255,255,255,0.6);
-    display:flex; align-items:center; justify-content:center;
-    color:#fff;
-    font-size:15px;
-    transform:rotate(20deg) scale(0.3);
-    opacity:0;
-    transition:opacity .3s ease, transform .35s cubic-bezier(.34,1.56,.64,1);
-    pointer-events: none;
-  }
-  .book.read .stamp-mark{opacity:1; transform:rotate(20deg) scale(1);}
-
   .empty{
     text-align:center;
     color:var(--dim);
@@ -1073,7 +1056,6 @@ function cardHtml(b){
 
   return `
   <div class="book ${b.status==='read'?'read':''} ${b.status==='reading'?'reading':''}" draggable="true" data-id="${b.id}">
-    <div class="stamp-mark">☾</div>
     <div class="cover">${coverMarkup}</div>
     <div class="book-info">
       <p class="book-title">${escapeHtml(b.title)}</p>
