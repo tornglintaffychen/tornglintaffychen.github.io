@@ -435,6 +435,7 @@
   .read-toggle.active-tbr { border-color: var(--sapphire); color: var(--sapphire); }
   .read-toggle.active-reading { border-color: var(--amber); color: #8a6a1a; background: rgba(217,164,65,0.1); }
   .read-toggle.active-read { background:linear-gradient(100deg, var(--emerald), var(--sapphire)); color:#fff; border-color:transparent; }
+  .read-toggle.active-dnf { background:linear-gradient(100deg, var(--ink), var(--dim)); color:#fff; }
 
   .del, .move-btn{
     font-family:'IBM Plex Mono',monospace;
@@ -716,6 +717,16 @@
     </div>
   </div>
 
+  <div class="shelf-section" id="shelfSection-dnf" data-shelf-section="dnf">
+    <div class="shelf-label" data-toggle-collapse="dnf">
+      <span class="chevron">▾</span> Did Not Finish <span class="shelf-count" id="count-dnf">0</span>
+    </div>
+    <div class="shelf-body">
+      <div id="dnfList" class="shelf-dropzone" data-shelf="dnf"></div>
+      <div class="empty" id="dnfEmpty">Nothing left behind &#128519;</div>
+    </div>
+  </div>
+
   <div class="util-row">
     <button class="util-btn" id="saveFilesBtn">📁 Save to Files</button>
     <button class="util-btn" id="loadFilesBtn">📂 Load from Files</button>
@@ -737,7 +748,7 @@
 
 <script>
 const STORAGE_KEY = 'bookshelf-books-v2';
-const SHELVES = ['reading', 'tbr', 'read'];
+const SHELVES = ['reading', 'tbr', 'read', 'dnf'];
 let currentInputMethod = 'manual';
 
 function normalizeBook(b){
@@ -761,6 +772,7 @@ function normalizeLibrary(raw){
     reading: (raw.reading || []).map(normalizeBook).sort((a, b) => new Date(b.dateStarted).getTime() - new Date(a.dateStarted).getTime()),
     tbr: (raw.tbr || []).map(normalizeBook),
     read: (raw.read || []).map(normalizeBook).sort((a, b) => new Date(b.dateCompleted).getTime() - new Date(a.dateCompleted).getTime()),
+    dnf: (raw.dnf || []).map(normalizeBook).sort((a, b) => new Date(b.dateStarted).getTime() - new Date(a.dateStarted).getTime()),
   };
 }
 
@@ -1102,6 +1114,9 @@ function cardHtml(b, shelf){
         <label class="edit-label-sm">Date Completed</label>
         <input class="edit-field" id="editDateCompleted-${b.id}" type="date" value="${formatDate(b.dateCompleted)}">
 
+        <label class="edit-label-sm">Date DNF</label>
+        <input class="edit-field" id="editDateDnf-${b.id}" type="date" value="${formatDate(b.dateDnf)}">
+
         <label class="edit-label-sm">Notes</label>
         <textarea class="edit-notes" id="editNotes-${b.id}" placeholder="Thoughts, quotes, or reasons to read...">${escapeHtml(b.notes||'')}</textarea>
 
@@ -1126,6 +1141,10 @@ function cardHtml(b, shelf){
     datesMarkup = `<div class="date-badge-row">✨ ${startStr}${endStr}</div>`;
   } else if (shelf === 'tbr' && b.dateAdded) {
     datesMarkup = `<div class="date-badge-row">&#128467; Added: ${formatDate(b.dateAdded)}</div>`;
+  } else if (shelf === 'dnf') {
+    const startStr = b.dateStarted ? `Started: ${formatDate(b.dateStarted)} &#10008;` : '';
+    const dnfStr = b.dateDnf ? ` DNF: ${formatDate(b.dateDnf)}` : '';
+    datesMarkup = `<div class="date-badge-row"> ${startStr}${dnfStr}</div>`;
   }
 
   return `
@@ -1151,6 +1170,7 @@ function cardHtml(b, shelf){
           <button class="read-toggle ${shelf==='tbr'?'active-tbr':''}" data-change-status="${b.id}" data-shelf-of="${shelf}" data-status="tbr">TBR</button>
           <button class="read-toggle ${shelf==='reading'?'active-reading':''}" data-change-status="${b.id}" data-shelf-of="${shelf}" data-status="reading">Reading</button>
           <button class="read-toggle ${shelf==='read'?'active-read':''}" data-change-status="${b.id}" data-shelf-of="${shelf}" data-status="read">✓ Read</button>
+          <button class="read-toggle ${shelf==='dnf'?'active-dnf':''}" data-change-status="${b.id}" data-shelf-of="${shelf}" data-status="dnf">DNF</button>
         </div>
         <span>
           <button class="move-btn" data-move="${b.id}" data-shelf-of="${shelf}" data-dir="up">↑</button>
@@ -1175,6 +1195,7 @@ async function saveEdit(shelf, id){
   const newNotes = document.getElementById(`editNotes-${id}`).value.trim();
   const newStart = document.getElementById(`editDateStarted-${id}`).value;
   const newComplete = document.getElementById(`editDateCompleted-${id}`).value;
+  const newDnf = document.getElementById(`editDateDnf-${id}`).value;
 
   if(!newTitle) return;
   const titleChanged = newTitle !== b.title || newAuthor !== (b.author||'');
@@ -1185,6 +1206,7 @@ async function saveEdit(shelf, id){
   b.notes = newNotes;
   b.dateStarted = newStart ? new Date(newStart).toISOString() : null;
   b.dateCompleted = newComplete ? new Date(newComplete).toISOString() : null;
+  b.dateDnf = newDnf ? new Date(newDnf).toISOString() : null;
 
   editingShelf = null;
   editingId = null;
@@ -1222,6 +1244,10 @@ function setBookStatus(fromShelf, id, targetShelf){
   if(targetShelf === 'read' && !b.dateCompleted) {
     b.dateCompleted = new Date().toISOString();
     if(!b.dateStarted) b.dateStarted = new Date().toISOString();
+  }
+
+  if(targetShelf === 'dnf') {
+    b.dateDnf = new Date().toISOString();
   }
 
   library[targetShelf].push(b);
